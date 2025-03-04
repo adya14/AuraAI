@@ -5,6 +5,9 @@ import asyncio
 from dotenv import load_dotenv
 from openai import OpenAI
 from prompt import get_interview_prompt
+import wave
+import numpy as np
+import tempfile
 
 # Load API keys
 load_dotenv()
@@ -12,11 +15,25 @@ SECRET_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=SECRET_KEY)
 
 async def transcribe_audio(audio_payload):
-    """Transcribe received WebSocket audio (Twilio -> Whisper)."""
-    transcript = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=audio_payload
-    )
+    """Convert G.711 u-law audio to WAV and transcribe it using OpenAI's Whisper."""
+    
+    # Convert G.711 u-law (8-bit, 8kHz) to PCM WAV
+    wav_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    
+    with wave.open(wav_file.name, "wb") as wf:
+        wf.setnchannels(1)  # Mono
+        wf.setsampwidth(2)  # 16-bit PCM
+        wf.setframerate(8000)  # 8kHz
+        pcm_data = np.frombuffer(audio_payload, dtype=np.uint8) - 128  # Convert u-law
+        wf.writeframes(pcm_data.tobytes())
+
+    # 🔹 Send WAV file to OpenAI for transcription
+    with open(wav_file.name, "rb") as audio_file:
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file
+        )
+    
     return transcript.text.strip()
 
 async def get_ai_response(text, role, job_description, request_rating=False, conversation_history=None):

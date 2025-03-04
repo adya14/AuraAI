@@ -35,9 +35,9 @@ async def make_call():
             from_=TWILIO_PHONE_NUMBER,
             twiml=f"""
             <Response>
-                <Say>Connecting you to the AI assistant.</Say>
+                <Say>Connecting you to the AI. Askara AI will be interviweing you today</Say>
                 <Connect>
-                    <Stream url="wss://92f2-223-181-33-83.ngrok-free.app/media-stream"/>
+                    <Stream url="wss://9d89-223-181-33-83.ngrok-free.app/media-stream"/>
                 </Connect>
             </Response>
             """
@@ -57,40 +57,56 @@ async def handle_media_stream(websocket: WebSocket):
 
     role = "Software Engineer"
     job_description = "Software Engineer role requiring Python, cloud, and AI experience."
-
-    # Keep track of the stream SID
     stream_sid = None
 
     while True:
         try:
             message = await websocket.receive_text()
             data = json.loads(message)
-            
+
             # 🔹 Extract stream SID from Twilio's first message
             if data["event"] == "start":
                 stream_sid = data["start"]["streamSid"]
                 print(f"✅ Stream SID: {stream_sid}")
 
-            # 🔹 Handle audio input from Twilio
+                # 🔹 AI Speaks Immediately
+                first_message = "Hi, I am Askara, your AI interviewer. Let's begin. Please introduce yourself."
+                print(f"AI: {first_message}")
+
+                # 🔹 Convert AI Text to Speech (AND SAVE FOR TESTING)
+                ai_audio_base64 = text_to_speech(first_message)
+
+                # 🔹 Send AI-generated speech to Twilio
+                print("🔹 Sending AI speech to Twilio...")
+                await websocket.send_json({
+                    "event": "media",
+                    "streamSid": stream_sid,
+                    "media": {"payload": ai_audio_base64}
+                })
+                print("✅ AI Speech Sent to Twilio!")
+
+            # 🔹 Handle user response
             elif data["event"] == "media":
                 print(f"📩 Received Audio Chunk: {data['media']['chunk']}")
 
-                # Generate AI response (text)
+                # Convert user speech to text
                 user_audio = base64.b64decode(data["media"]["payload"])
                 user_input = await transcribe_audio(user_audio)
+
+                # 🔹 AI Generates Response
                 ai_response = await get_ai_response(user_input, role, job_description)
 
-                # Convert AI text response to speech (G.711 u-law)
-                ai_audio = text_to_speech(ai_response)  # Implement this function
+                # 🔹 Convert AI Response to Speech
+                ai_audio_base64 = text_to_speech(ai_response)
 
-                # 🔹 Send AI-generated audio back to Twilio
-                audio_payload = base64.b64encode(ai_audio).decode("utf-8")
-                audio_response = {
+                # 🔹 Send AI-generated speech to Twilio
+                print("🔹 Sending AI speech to Twilio...")
+                await websocket.send_json({
                     "event": "media",
                     "streamSid": stream_sid,
-                    "media": {"payload": audio_payload}
-                }
-                await websocket.send_json(audio_response)
+                    "media": {"payload": ai_audio_base64}
+                })
+                print("✅ AI Speech Sent to Twilio!")
 
         except Exception as e:
             print(f"❌ WebSocket Error: {e}")
@@ -98,7 +114,6 @@ async def handle_media_stream(websocket: WebSocket):
 
     print("🔴 WebSocket Closed")
     await websocket.close()
-
         
 @app.get("/")
 async def root():
