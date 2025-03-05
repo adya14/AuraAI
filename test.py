@@ -13,6 +13,8 @@ import tempfile
 load_dotenv()
 SECRET_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=SECRET_KEY)
+ROLE = "SDE"
+JOB_DESCRIPTION = "Python, ML, Cloud"
 
 async def transcribe_audio(audio_payload):
     """Convert G.711 u-law audio to WAV and transcribe it using OpenAI's Whisper."""
@@ -62,8 +64,8 @@ async def handle_interview(websocket=None, role=None, job_description=None, term
     """Manage AI interview through WebSocket or terminal testing."""
 
     if terminal_mode:
-        role = input("Enter the job role: ")
-        job_description = input("Enter the job description: ")
+        role = ROLE
+        job_description = JOB_DESCRIPTION
 
     initial_message = f"Hi, I am Askara, your AI interviewer. I will be conducting your interview today for the {role} role. Let's start with an introduction. Tell me all about yourself."
     

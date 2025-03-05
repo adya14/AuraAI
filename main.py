@@ -4,7 +4,7 @@ from fastapi import FastAPI, Form
 from fastapi.responses import Response
 from twilio.rest import Client
 from dotenv import load_dotenv
-from test import get_ai_response  # No need for WebSockets or TTS
+from test import get_ai_response, ROLE, JOB_DESCRIPTION  # No need for WebSockets or TTS
 
 # Load API keys
 load_dotenv()
@@ -33,8 +33,8 @@ async def make_call():
             twiml=f"""
             <Response>
                 <Say>Connecting you to the AI.</Say>
-                <Gather input="speech" action="https://3c9b-223-181-33-83.ngrok-free.app/process-response" timeout="5">
-                    <Say>Hi, I am Askara, your AI interviewer. Let's begin. Can you start with introduce yourself.</Say>
+                <Gather input="speech" action="https://3c9b-223-181-33-83.ngrok-free.app/process-response" timeout="10">
+                    <Say>Hi, I am Askara, your AI interviewer. Let's begin. Please introduce yourself.</Say>
                 </Gather>
             </Response>
             """
@@ -51,8 +51,8 @@ async def process_response(SpeechResult: str = Form("")):
     try:
         print(f"Candidate: {SpeechResult}")
 
-        role = "Software Engineer"
-        job_description = "Software Engineer role requiring Python, cloud, and AI experience."
+        role = ROLE
+        job_description = JOB_DESCRIPTION
 
         # 🔹 AI Generates Response
         ai_response = await get_ai_response(SpeechResult, role, job_description)
@@ -62,7 +62,8 @@ async def process_response(SpeechResult: str = Form("")):
         twiml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
         <Response>
             <Say>{ai_response}</Say>
-            <Gather input="speech" action="https://9d89-223-181-33-83.ngrok-free.app/process-response" timeout="10">
+            <Gather input="speech" action="https://3c9b-223-181-33-83.ngrok-free.app/process-response" timeout="5">
+                <Say>Please continue.</Say>
             </Gather>
         </Response>
         """
