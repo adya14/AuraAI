@@ -1,13 +1,10 @@
 import os
 import json
-import base64
-import asyncio
-import requests
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Form
+from fastapi.responses import Response
 from twilio.rest import Client
 from dotenv import load_dotenv
-from test import handle_interview, transcribe_audio, get_ai_response  
-from tts import text_to_speech
+from test import get_ai_response  # No need for WebSockets or TTS
 
 # Load API keys
 load_dotenv()
@@ -27,7 +24,7 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 @app.post("/make-call")
 async def make_call():
-    """Initiate an outbound call."""
+    """Initiate an outbound call using Twilio's built-in text-to-speech and Gather."""
     try:
         print("Attempting to make a call...")
         call = client.calls.create(
@@ -35,10 +32,10 @@ async def make_call():
             from_=TWILIO_PHONE_NUMBER,
             twiml=f"""
             <Response>
-                <Say>Connecting you to the AI. Askara AI will be interviweing you today</Say>
-                <Connect>
-                    <Stream url="wss://9d89-223-181-33-83.ngrok-free.app/media-stream"/>
-                </Connect>
+                <Say>Connecting you to the AI.</Say>
+                <Gather input="speech" action="https://3c9b-223-181-33-83.ngrok-free.app/process-response" timeout="5">
+                    <Say>Hi, I am Askara, your AI interviewer. Let's begin. Can you start with introduce yourself.</Say>
+                </Gather>
             </Response>
             """
         )
@@ -48,76 +45,37 @@ async def make_call():
         print("Error making call:", e)
         return {"error": str(e)}
 
-@app.websocket("/media-stream")
-async def handle_media_stream(websocket: WebSocket):
-    """Handle WebSocket connections between Twilio and OpenAI."""
-    print("🔹 WebSocket Connection Attempt...")
-    await websocket.accept()
-    print("✅ WebSocket Accepted Successfully!")
+@app.post("/process-response")
+async def process_response(SpeechResult: str = Form("")):
+    """Receive user speech input from Twilio, generate AI response, and send it back as TwiML."""
+    try:
+        print(f"Candidate: {SpeechResult}")
 
-    role = "Software Engineer"
-    job_description = "Software Engineer role requiring Python, cloud, and AI experience."
-    stream_sid = None
+        role = "Software Engineer"
+        job_description = "Software Engineer role requiring Python, cloud, and AI experience."
 
-    while True:
-        try:
-            message = await websocket.receive_text()
-            data = json.loads(message)
+        # 🔹 AI Generates Response
+        ai_response = await get_ai_response(SpeechResult, role, job_description)
+        print(f"AI: {ai_response}")
 
-            # 🔹 Extract stream SID from Twilio's first message
-            if data["event"] == "start":
-                stream_sid = data["start"]["streamSid"]
-                print(f"✅ Stream SID: {stream_sid}")
+        # 🔹 Send AI Response as Valid TwiML
+        twiml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+            <Say>{ai_response}</Say>
+            <Gather input="speech" action="https://9d89-223-181-33-83.ngrok-free.app/process-response" timeout="10">
+            </Gather>
+        </Response>
+        """
 
-                # 🔹 AI Speaks Immediately
-                first_message = "Hi, I am Askara, your AI interviewer. Let's begin. Please introduce yourself."
-                print(f"AI: {first_message}")
+        return Response(content=twiml_response, media_type="application/xml")
 
-                # 🔹 Convert AI Text to Speech (AND SAVE FOR TESTING)
-                ai_audio_base64 = text_to_speech(first_message)
+    except Exception as e:
+        print(f"❌ Error Processing Response: {e}")
+        return Response(content="""<?xml version="1.0" encoding="UTF-8"?><Response><Say>Sorry, an error occurred.</Say></Response>""", media_type="application/xml")
 
-                # 🔹 Send AI-generated speech to Twilio
-                print("🔹 Sending AI speech to Twilio...")
-                await websocket.send_json({
-                    "event": "media",
-                    "streamSid": stream_sid,
-                    "media": {"payload": ai_audio_base64}
-                })
-                print("✅ AI Speech Sent to Twilio!")
-
-            # 🔹 Handle user response
-            elif data["event"] == "media":
-                print(f"📩 Received Audio Chunk: {data['media']['chunk']}")
-
-                # Convert user speech to text
-                user_audio = base64.b64decode(data["media"]["payload"])
-                user_input = await transcribe_audio(user_audio)
-
-                # 🔹 AI Generates Response
-                ai_response = await get_ai_response(user_input, role, job_description)
-
-                # 🔹 Convert AI Response to Speech
-                ai_audio_base64 = text_to_speech(ai_response)
-
-                # 🔹 Send AI-generated speech to Twilio
-                print("🔹 Sending AI speech to Twilio...")
-                await websocket.send_json({
-                    "event": "media",
-                    "streamSid": stream_sid,
-                    "media": {"payload": ai_audio_base64}
-                })
-                print("✅ AI Speech Sent to Twilio!")
-
-        except Exception as e:
-            print(f"❌ WebSocket Error: {e}")
-            break  # Stop loop on error
-
-    print("🔴 WebSocket Closed")
-    await websocket.close()
-        
 @app.get("/")
 async def root():
-    return {"message": "Twilio media service is running"}
+    return {"message": "Twilio AI interview service is running"}
 
 if __name__ == "__main__":
     import uvicorn
