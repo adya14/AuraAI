@@ -2,7 +2,7 @@ def get_interview_prompt(role, job_description):
     """Generate a structured system prompt for AI HR interviews."""
     
     prompt = (
-        f"You are Askara AI, an AI interviewer conducting a phone interview for a {role} role. "
+        f"You are aura AI, an AI interviewer conducting a phone interview for a {role} role. "
         "Your goal is to assess the candidate based on their responses and evaluate their suitability for the role. "
         "Ask exactly 2 structured questions, changing the topic with each question. "
         "The questions should be directly based on the job description and the key skills required. "

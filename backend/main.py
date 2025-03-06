@@ -1,11 +1,12 @@
 import os
-import json
 from fastapi import FastAPI, Form
 from fastapi.responses import Response
 from twilio.rest import Client
 from dotenv import load_dotenv
-from test import transcribe_audio, get_ai_response, ROLE, JOB_DESCRIPTION
+from interview import transcribe_audio, get_ai_response, ROLE, JOB_DESCRIPTION
 from collections import defaultdict
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # Load environment variables
 load_dotenv()
@@ -15,25 +16,39 @@ TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 RECIPIENT_PHONE_NUMBER = os.getenv('RECIPIENT_PHONE_NUMBER')
-NGROK_URL = "https://1640-223-181-33-252.ngrok-free.app"
+NGROK_URL = "https://d08f-223-181-33-252.ngrok-free.app"
 
 app = FastAPI()
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class CallRequest(BaseModel):
+    name: str
+    phone: str
 
 # Track interview state (in-memory storage; replace with a database in production)
 interview_state = defaultdict(dict)
 
 @app.post("/make-call")
+# async def make_call(request: CallRequest)
 async def make_call():
     """Initiate an outbound call and initialize interview state."""
     try:
         print("Attempting to make a call...")
         call = client.calls.create(
+            # to = request.phone,
             to=RECIPIENT_PHONE_NUMBER,
             from_=TWILIO_PHONE_NUMBER,
             twiml=f"""
             <Response>
-                <Say>Connecting you to the AI.</Say>
+                <Say>Hi I am aura. Your AI interviewer for the {ROLE} position today. Can you start by introducing yourself</Say>
                 <Record action="{NGROK_URL}/process-response" timeout="10" transcribe="false" />
             </Response>
             """
@@ -43,7 +58,7 @@ async def make_call():
             "conversation_history": [],
             "question_count": 0,
             "in_qna_phase": False,
-            "is_introduction_done": False
+            "is_introduction_done": True
         }
         print(f"Call initiated. Call SID: {call.sid}")
         return {"message": "Call initiated", "call_sid": call.sid}
@@ -61,9 +76,9 @@ async def make_call():
             from_=TWILIO_PHONE_NUMBER,
             twiml=f"""
             <Response>
-                <Say>Hi, I am Askara, your AI interviewer. Can you start with introducing yourself.</Say>
+                <Say>Hi, I am aura, your AI interviewer. Can you start with introducing yourself.</Say>
                 <Gather input="speech" action="{NGROK_URL}/process-response" timeout="10">
-                    <Say>Hi, I am Askara, your AI interviewer. Let's begin. Please introduce yourself.</Say>
+                    <Say>Hi, I am aura, your AI interviewer. Let's begin. Please introduce yourself.</Say>
                 </Gather>
             </Response>
             """
@@ -100,7 +115,7 @@ async def process_response(SpeechResult: str = Form(None), CallSid: str = Form(N
             <Response>
                 <Say>I didn't hear anything. Please try again.</Say>
                 <Gather input="speech" action="{NGROK_URL}/process-response" timeout="5">
-                    <Say>Please introduce yourself.</Say>
+                    <Say>..</Say>
                 </Gather>
             </Response>
             """
