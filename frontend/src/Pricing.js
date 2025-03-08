@@ -8,9 +8,9 @@ const Pricing = () => {
       <div className="pricing-cards">
         <div className="card">
           <h2>Basic Plan</h2>
-          <p>$99/month</p>
+          <p>₹999/month</p>
           <ul>
-            <li>10 AI Interviews per month</li>
+            <li>50 AI Interviews per month</li>
             <li>Basic Analytics</li>
             <li>Email Support</li>
           </ul>
@@ -18,21 +18,21 @@ const Pricing = () => {
         </div>
         <div className="card">
           <h2>Pro Plan</h2>
-          <p>$199/month</p>
+          <p>₹4999/month</p>
           <ul>
-            <li>50 AI Interviews per month</li>
+            <li>250 AI Interviews per month</li>
             <li>Advanced Analytics</li>
             <li>Priority Support</li>
           </ul>
           <button className="pricing-button">Buy Now</button>
         </div>
         <div className="card">
-          <h2>Enterprise Plan</h2>
-          <p>Custom Pricing</p>
+          <h2>Quantum Flex Plan</h2>
+          <p>Pay as you go</p>
           <ul>
             <li>Unlimited AI Interviews</li>
-            <li>Custom Analytics</li>
-            <li>Dedicated Account Manager</li>
+            <li>Advanced Analytics</li>
+            <li>Priority Support</li>
           </ul>
           <button className="pricing-button">Contact Us</button>
         </div>

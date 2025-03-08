@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
-import logo from "./logo.png";
+import logo from "./images/logo.png";
 import Pricing from "./Pricing";
 import Contact from "./Contact";
+import facebookIcon from "./images/facebook.png";
+import linkedinIcon from "./images/linkedin.png";
+import instagramIcon from "./images/instagram.png";
+import AuthModal from './AuthModal';
 
 function App() {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const updateCursorPosition = (e) => {
@@ -47,10 +52,16 @@ function App() {
             </div>
           </div>
           <div className="navbar-right">
-            <button className="signup-button">Sign Up</button>
-            <button className="login-button">Login</button>
+            <button className="signup-button" onClick={() => setIsAuthModalOpen(true)}>
+              Sign Up / Login
+            </button>
           </div>
         </nav>
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onRequestClose={() => setIsAuthModalOpen(false)}
+        />
 
         {/* Routes */}
         <Routes>
@@ -82,17 +93,33 @@ function App() {
                 </div>
               </section>
 
-              {/* Testimonials Section */}
-              <section className="testimonials">
-                <h2>What Our Clients Say</h2>
-                <div className="testimonial-cards">
-                  <div className="card">
-                    <p>"Aura AI has revolutionized our hiring process. Highly recommended!"</p>
-                    <p>- John Doe, CEO of XYZ Corp</p>
+              {/* How it works Section */}
+              <section className="how-it-works">
+                <h2>How It Works</h2>
+                <div className="steps-container">
+                  <div className="step">
+                    <h3>1. Schedule an Interview</h3>
+                    <p>Choose a date and time that works for you, and the candidate.</p>
                   </div>
-                  <div className="card">
-                    <p>"The AI interviews are seamless and efficient. Great product!"</p>
-                    <p>- Jane Smith, HR Manager at ABC Inc</p>
+                  <div className="step">
+                    <h3>2. Enter the details</h3>
+                    <p>Enter the candidates phone number, job description and job role.</p>
+                  </div>
+                  <div className="step">
+                    <h3>3. Candidate Joins the Interview</h3>
+                    <p>Candidates directly receive a interview via phone call—no downloads required.</p>
+                  </div>
+                  <div className="step">
+                    <h3>4. AI Conducts the Interview</h3>
+                    <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
+                  </div>
+                  <div className="step">
+                    <h3>5. Data-Driven Insights</h3>
+                    <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
+                  </div>
+                  <div className="step">
+                    <h3>6. Review and Hire</h3>
+                    <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
                   </div>
                 </div>
               </section>
@@ -100,11 +127,54 @@ function App() {
           } />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
+  
         </Routes>
 
         {/* Footer */}
         <footer className="footer">
-          <p>&copy; 2024 Aura AI. All rights reserved.</p>
+          <div className="footer-content">
+            <div className="footer-section">
+              <h3>About Us</h3>
+              <p>
+                Aura AI is revolutionizing the hiring process with AI-powered phone interviews. 
+                Our mission is to make recruitment seamless, efficient, and data-driven.
+              </p>
+            </div>
+            <div className="footer-section">
+              <h3>Quick Links</h3>
+              <ul>
+                <li><Link to="/">Home</Link></li>
+                <li><Link to="/pricing">Pricing</Link></li>
+                <li><Link to="/contact">Contact</Link></li>
+                <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service">Terms of Service</Link></li>
+              </ul>
+            </div>
+            <div className="footer-section">
+              <h3>Contact Us</h3>
+              <ul>
+                <li>Email: adyatwr@gmail.com</li>
+                <li>Phone: +91 88516 19182</li>
+              </ul>
+            </div>
+            <div className="footer-section">
+              <h3>Follow Us</h3>
+              <div className="social-links">
+                <a href="https://facebook.com/auraai" target="_blank" rel="noopener noreferrer">
+                  <img src={facebookIcon} alt="Facebook" />
+                </a>
+                <a href="https://linkedin.com/company/auraai" target="_blank" rel="noopener noreferrer">
+                  <img src={linkedinIcon} alt="LinkedIn" />
+                </a>
+                <a href="https://instagram.com/auraai" target="_blank" rel="noopener noreferrer">
+                  <img src={instagramIcon} alt="Instagram" />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2024 Aura AI. All rights reserved.</p>
+          </div>
         </footer>
       </div>
     </Router>
