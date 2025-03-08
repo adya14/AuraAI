@@ -8,6 +8,7 @@ import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
 import AuthModal from './AuthModal';
+import profile from './profile'
 
 function App() {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });

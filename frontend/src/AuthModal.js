@@ -1,22 +1,29 @@
 import React, { useState } from 'react';
 import ReactModal from 'react-modal';
 import axios from 'axios';
-import googleicon from "./images/google.png"
+import googleicon from "./images/google.png";
 
 // Set the root element for accessibility (required by ReactModal)
 ReactModal.setAppElement('#root');
 
 const AuthModal = ({ isOpen, onRequestClose }) => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
+  const [firstName, setFirstName] = useState(''); // State for first name
+  const [lastName, setLastName] = useState(''); // State for last name
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const endpoint = isLogin ? '/api/login' : '/api/signup';
+    const endpoint = isLogin ? '/login' : '/signup';
     try {
-      const response = await axios.post(`http://localhost:5000${endpoint}`, { email, password });
+      const payload = isLogin
+        ? { email, password } // For login, only email and password are needed
+        : { firstName, lastName, email, password }; // For signup, include firstName and lastName
+
+      const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user data
       alert(isLogin ? 'Login successful!' : 'Signup successful!');
       onRequestClose(); // Close the modal after successful login/signup
     } catch (error) {
@@ -34,6 +41,25 @@ const AuthModal = ({ isOpen, onRequestClose }) => {
     >
       <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
       <form onSubmit={handleSubmit}>
+        {/* Show firstName and lastName fields only during signup */}
+        {!isLogin && (
+          <>
+            <input
+              type="text"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+          </>
+        )}
         <input
           type="email"
           placeholder="Email"
@@ -66,7 +92,7 @@ const AuthModal = ({ isOpen, onRequestClose }) => {
       {/* Google Login Button */}
       <div className="google-login">
         <p>Or {isLogin ? 'login' : 'sign up'} with:</p>
-        <a href="http://localhost:5000/api/auth/google" className="google-button">
+        <a href="http://localhost:5000/auth/google" className="google-button">
           <img src={googleicon} alt="Google Icon" />
           <span>Google</span>
         </a>

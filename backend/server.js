@@ -1,8 +1,8 @@
 const express = require('express');
 const connectDB = require('./db');
-const passport = require('passport');
+const passport = require('./config/passportConfig'); // Import Passport config
 const authRoutes = require('./routes/authRoutes');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 
 require('dotenv').config();
 
@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(passport.initialize());
 
 // Use your authentication routes
-app.use('/api', authRoutes);
+app.use('/', authRoutes);
 
 // Add a route for the root URL
 app.get('/', (req, res) => {
