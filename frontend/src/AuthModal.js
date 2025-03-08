@@ -6,7 +6,7 @@ import googleicon from "./images/google.png";
 // Set the root element for accessibility (required by ReactModal)
 ReactModal.setAppElement('#root');
 
-const AuthModal = ({ isOpen, onRequestClose }) => {
+const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
   const [firstName, setFirstName] = useState(''); // State for first name
   const [lastName, setLastName] = useState(''); // State for last name
@@ -24,6 +24,7 @@ const AuthModal = ({ isOpen, onRequestClose }) => {
       const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user data
+      onAuthSuccess(response.data.user); // Notify parent component of successful auth
       alert(isLogin ? 'Login successful!' : 'Signup successful!');
       onRequestClose(); // Close the modal after successful login/signup
     } catch (error) {
