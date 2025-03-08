@@ -11,6 +11,7 @@ import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
 import AuthModal from './AuthModal';
 import Profile from './profile';
+import axios from 'axios';
 
 function App() {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
@@ -62,10 +63,32 @@ function App() {
       }
     }
 
+    // Check for token in the URL (for Google OAuth)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      localStorage.setItem('token', tokenFromUrl);
+      axios.get('http://localhost:5000/api/profile', {
+        headers: {
+          Authorization: `Bearer ${tokenFromUrl}`,
+        },
+      })
+      .then(response => {
+        const userData = response.data.user;
+        localStorage.setItem('user', JSON.stringify(userData));
+        setIsAuthenticated(true);
+        setUser(userData);
+        navigate('/'); // Redirect to home after successful login
+      })
+      .catch(error => {
+        console.error('Error fetching user profile:', error);
+      });
+    }
+
     return () => {
       window.removeEventListener("mousemove", updateCursorPosition);
     };
-  }, []);
+  }, [navigate]);
 
   // Handle successful login/signup
   const handleAuthSuccess = (userData) => {

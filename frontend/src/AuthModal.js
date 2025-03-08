@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactModal from 'react-modal';
 import axios from 'axios';
 import googleicon from "./images/google.png";
@@ -31,6 +31,29 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       alert(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
     }
   };
+
+  // Handle Google OAuth login
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      // Fetch user data using the token
+      axios.get('http://localhost:5000/api/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(response => {
+        const userData = response.data.user;
+        localStorage.setItem('user', JSON.stringify(userData));
+        onAuthSuccess(userData);
+      })
+      .catch(error => {
+        console.error('Error fetching user profile:', error);
+      });
+    }
+  }, [onAuthSuccess]);
 
   return (
     <ReactModal
