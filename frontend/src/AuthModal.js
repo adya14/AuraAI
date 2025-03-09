@@ -25,8 +25,24 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user data
       onAuthSuccess(response.data.user); // Notify parent component of successful auth
-      alert(isLogin ? 'Login successful!' : 'Signup successful!');
-      onRequestClose(); // Close the modal after successful login/signup
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        const endpoint = isLogin ? '/login' : '/signup';
+        try {
+          const payload = isLogin
+            ? { email, password }
+            : { firstName, lastName, email, password };
+      
+          const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          onAuthSuccess(response.data.user);
+          onRequestClose(); // Close modal after success
+        } catch (error) {
+          alert(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
+        }
+      };
+            onRequestClose(); // Close the modal after successful login/signup
     } catch (error) {
       alert(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
     }

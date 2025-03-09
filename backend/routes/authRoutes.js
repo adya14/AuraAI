@@ -60,19 +60,19 @@ router.get('/auth/google/callback',
 // Profile Route (Protected by JWT)
 router.get('/api/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
-    console.log('Authenticated using:', req.user.userId); // Debugging
+    // console.log('Authenticated using:', req.user._id); 
 
     // Fetch the user's profile information from the database
-    const user = await User.findById(req.user.userId).select('-password'); // Exclude the password field
+    const user = await User.findById(req.user._id).select('-password'); // Exclude the password field
     if (!user) {
-      console.log('User not found'); // Debugging
+      // console.log('User not found'); 
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('User data:', user); // Debugging
+    // console.log('User data:', user); 
     res.json({ user });
   } catch (error) {
-    console.error('Error fetching profile:', error); // Debugging
+    console.error('Error fetching profile:', error); 
     res.status(500).json({ error: error.message });
   }
 });

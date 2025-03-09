@@ -14,7 +14,7 @@ import Profile from './profile';
 import axios from 'axios';
 
 function App() {
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  // const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
   const [user, setUser] = useState(null); // Store user data
@@ -40,11 +40,11 @@ function App() {
   };
 
   useEffect(() => {
-    const updateCursorPosition = (e) => {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    };
+    // const updateCursorPosition = (e) => {
+    //   setCursorPosition({ x: e.clientX, y: e.clientY });
+    // };
 
-    window.addEventListener("mousemove", updateCursorPosition);
+    // window.addEventListener("mousemove", updateCursorPosition);
 
     // Check if the user is already authenticated (e.g., on page reload)
     const token = localStorage.getItem('token');
@@ -85,9 +85,9 @@ function App() {
       });
     }
 
-    return () => {
-      window.removeEventListener("mousemove", updateCursorPosition);
-    };
+    // return () => {
+    //   window.removeEventListener("mousemove", updateCursorPosition);
+    // };
   }, [navigate]);
 
   // Handle successful login/signup
@@ -108,13 +108,13 @@ function App() {
   return (
     <div className="container-fluid">
       {/* Interactive Cursor */}
-      <div
+      {/* <div
         className="cursor"
         style={{
           left: `${cursorPosition.x}px`,
           top: `${cursorPosition.y}px`,
         }}
-      ></div>
+      ></div> */}
 
       {/* Custom Navbar */}
       <nav className="custom-navbar">

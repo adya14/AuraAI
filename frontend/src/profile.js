@@ -2,32 +2,34 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Profile.css';
 
-console.log('Profile component rendered'); // Debugging
-
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('Token:', token); // Debugging
+        if (!token) return;
 
         const response = await axios.get('http://localhost:5000/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log('Profile data:', response.data); // Debugging
-        setUser(response.data.user);
+        if (!user || user._id !== response.data.user._id) {
+          setUser(response.data.user);
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false); // Ensure loading stops
       }
     };
 
     fetchProfile();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
-  if (!user) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">Loading...</div>;
 
   return (
     <div className="profile-container">
