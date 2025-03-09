@@ -1,8 +1,11 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('../models/user');
 require('dotenv').config();
 
+// Serialize and deserialize user
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -16,6 +19,7 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
+// Google OAuth strategy
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -24,7 +28,12 @@ passport.use(new GoogleStrategy({
   try {
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      user = new User({ googleId: profile.id, email: profile.emails[0].value });
+      user = new User({
+        googleId: profile.id,
+        email: profile.emails[0].value,
+        firstName: profile.name.givenName,
+        lastName: profile.name.familyName,
+      });
       await user.save();
     }
     done(null, user);
@@ -32,5 +41,36 @@ passport.use(new GoogleStrategy({
     done(error, null);
   }
 }));
+
+// JWT strategy
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Extract JWT from the Authorization header
+  secretOrKey: process.env.JWT_SECRET, // Use your JWT secret from environment variables
+};
+
+passport.use(
+  new JwtStrategy(jwtOptions, async (payload, done) => {
+    try {
+      console.log('JWT payload:', payload); // Debugging
+      if (!payload.userId) {
+        console.error('User ID not found in JWT payload'); // Debugging
+        return done(null, false);
+      }
+
+      // Find the user by ID from the JWT payload
+      const user = await User.findById(payload.userId);
+      if (!user) {
+        console.error('User not found in database'); // Debugging
+        return done(null, false); // User not found
+      }
+
+      console.log('Authenticated user:', user); // Debugging
+      return done(null, user); // User found
+    } catch (error) {
+      console.error('Error in JWT strategy:', error); // Debugging
+      return done(error, false); // Error occurred
+    }
+  })
+);
 
 module.exports = passport;
