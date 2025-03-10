@@ -11,12 +11,20 @@ const Profile = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/'; 
+  };  
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token) {
+          handleLogout();
+          return;
+        }
 
         const response = await axios.get('http://localhost:5000/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -27,6 +35,7 @@ const Profile = () => {
         setLastName(response.data.user.lastName);
       } catch (error) {
         console.error('Error fetching profile:', error);
+        handleLogout();
       } finally {
         setLoading(false);
       }

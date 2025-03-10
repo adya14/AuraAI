@@ -1,7 +1,66 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./Pricing.css";
+import AuthModal from "./AuthModal";
+import axios from "axios";
 
 const Pricing = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token); // Convert token existence to boolean
+  }, []);
+
+  // Handle Buy Now Click
+  const handleBuyNow = async (planName, price) => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true); // Show login/signup popup if user is not authenticated
+      return;
+    }
+
+    try {
+      // Create a payment order on the backend
+      const response = await axios.post("http://localhost:5000/api/create-order", {
+        plan: planName,
+        amount: price,
+      });
+
+      const { orderId, amount } = response.data;
+
+      // Check if Razorpay is available
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not loaded");
+      }
+      // Configure Razorpay payment options
+      const options = {
+        key: "rzp_test_hQcNyHrxX8CxIR", // Replace with your Razorpay Key ID
+        amount: amount * 100, // Amount in paisa (₹1 = 100 paise)
+        currency: "INR",
+        name: "Aura AI",
+        description: `Payment for ${planName}`,
+        order_id: orderId,
+        handler: async function (response) {
+          alert("Payment Successful!");
+          console.log(response);
+        },
+        prefill: {
+          email: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email : "",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Error processing payment. Please try again.");
+    }
+  };
+
   return (
     <div className="pricing">
       <h1>Pricing</h1>
@@ -14,7 +73,9 @@ const Pricing = () => {
             <li>Basic Analytics</li>
             <li>Email Support</li>
           </ul>
-          <button className="pricing-button">Buy Now</button>
+          <button className="pricing-button" onClick={() => handleBuyNow("Basic Plan", 999)}>
+            Buy Now
+          </button>
         </div>
         <div className="card">
           <h2>Pro Plan</h2>
@@ -24,7 +85,9 @@ const Pricing = () => {
             <li>Advanced Analytics</li>
             <li>Priority Support</li>
           </ul>
-          <button className="pricing-button">Buy Now</button>
+          <button className="pricing-button" onClick={() => handleBuyNow("Pro Plan", 4999)}>
+            Buy Now
+          </button>
         </div>
         <div className="card">
           <h2>Quantum Flex Plan</h2>
@@ -34,9 +97,17 @@ const Pricing = () => {
             <li>Advanced Analytics</li>
             <li>Priority Support</li>
           </ul>
-          <button className="pricing-button">Contact Us</button>
+          <button className="pricing-button" onClick={() => handleBuyNow("Quantum Flex Plan", 10000)}>
+            Buy Now
+          </button>
         </div>
       </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onRequestClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 };

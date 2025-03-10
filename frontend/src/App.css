@@ -368,6 +368,13 @@ body {
   margin-right: 10px;
 }
 
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
 /* Navbar Buttons */
 .signup-button {
   background-color: #007bff;

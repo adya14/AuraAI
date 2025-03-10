@@ -7,33 +7,46 @@ import googleicon from "./images/google.png";
 ReactModal.setAppElement('#root');
 
 const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
-  const [firstName, setFirstName] = useState(''); // State for first name
-  const [lastName, setLastName] = useState(''); // State for last name
+  const [isLogin, setIsLogin] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [error, setError] = useState(''); // Store error messages
 
+  // Handle login/signup submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Clear previous errors
     const endpoint = isLogin ? '/login' : '/signup';
+
     try {
       const payload = isLogin
-        ? { email, password } // For login, only email and password are needed
-        : { firstName, lastName, email, password }; // For signup, include firstName and lastName
+        ? { email, password }
+        : { firstName, lastName, email, password };
 
       const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user data
-      onAuthSuccess(response.data.user); // Notify parent component of successful auth
-      onRequestClose(); // Close modal after success
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      onAuthSuccess(response.data.user);
+      onRequestClose();
     } catch (error) {
-      const errorMessage = error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed');
+      setError(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed')); // Show error inside modal
+    }
+  };
 
-      if (errorMessage.includes("Account already exists")) {
-        alert("This email is already registered with Google. Please log in using Google.");
-      } else {
-        alert(errorMessage);
-      }
+  // Handle password reset request
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError(''); // Clear previous errors
+    try {
+      await axios.post('http://localhost:5000/api/forgot-password', { email: resetEmail });
+      setError('A password reset link has been sent to your email.');
+      setShowForgotPassword(false);
+    } catch (error) {
+      setError('Error sending reset email. Please try again.');
     }
   };
 
@@ -42,12 +55,12 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');
     const token = urlParams.get('token');
-  
+
     if (error) {
-      alert(decodeURIComponent(error)); // Show error message
-      window.history.replaceState({}, document.title, window.location.pathname); // Remove error from URL
+      setError(decodeURIComponent(error));
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  
+
     if (token) {
       localStorage.setItem('token', token);
       axios.get('http://localhost:5000/api/profile', {
@@ -63,7 +76,6 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       });
     }
   }, [onAuthSuccess]);
-  
 
   return (
     <ReactModal
@@ -73,81 +85,122 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       className="modal"
       overlayClassName="overlay"
     >
-      <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
-      <form onSubmit={handleSubmit}>
-        {/* Show firstName and lastName fields only during signup */}
-        {!isLogin && (
-          <>
+      {showForgotPassword ? (
+        <div>
+          <h2>Forgot Password</h2>
+          <form onSubmit={handleForgotPassword}>
             <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              type="email"
+              placeholder="Enter your email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              required
+            />
+            {error && <p className="error-message">{error}</p>}
+            <button type="submit">Send Reset Link</button>
+          </form>
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(false)}
+            style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+          >
+            Back to Login
+          </button>
+        </div>
+      ) : (
+        <>
+          <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
+          <form onSubmit={handleSubmit}>
+            {!isLogin && (
+              <>
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </>
+            )}
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
             <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
-          </>
-        )}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
-      </form>
 
-      {/* Toggle between login and signup */}
-      <p>
-        {isLogin ? "Don't have an account? " : "Already have an account? "}
-        <button
-          type="button"
-          onClick={() => setIsLogin(!isLogin)}
-          style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
-        >
-          {isLogin ? 'Sign Up' : 'Login'}
-        </button>
-      </p>
+            {/* Display Errors Here */}
+            {error && <p className="error-message">{error}</p>}
 
-      {/* Google Login Button */}
-      <div className="google-login">
-        <p>Or {isLogin ? 'login' : 'sign up'} with:</p>
-        <a href="http://localhost:5000/auth/google" className="google-button">
-          <img src={googleicon} alt="Google Icon" />
-          <span>Google</span>
-        </a>
-      </div>
+            <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
+          </form>
+
+          {/* Forgot Password Link */}
+          {isLogin && (
+            <p>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+              >
+                Forgot Password?
+              </button>
+            </p>
+          )}
+
+          <p>
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+            >
+              {isLogin ? 'Sign Up' : 'Login'}
+            </button>
+          </p>
+
+          {/* Google Login Button */}
+          <div className="google-login">
+            <p>Or {isLogin ? 'login' : 'sign up'} with:</p>
+            <a href="http://localhost:5000/auth/google" className="google-button">
+              <img src={googleicon} alt="Google Icon" />
+              <span>Google</span>
+            </a>
+          </div>
+        </>
+      )}
 
       {/* Close Button */}
-        <button 
-          type="button" 
-          onClick={onRequestClose} 
-          style={{
-            position: 'absolute',  // Position it absolutely within the modal
-            top: '10px',           // 10px from the top
-            right: '10px',          // 10px from the left
-            background: 'none', 
-            border: 'none', 
-            fontSize: '18px', 
-            cursor: 'pointer'
-          }}
-        >
-          ✖
-        </button>
+      <button
+        type="button"
+        onClick={onRequestClose}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+          fontSize: '18px',
+          cursor: 'pointer'
+        }}
+      >
+        ✖
+      </button>
     </ReactModal>
   );
 };
