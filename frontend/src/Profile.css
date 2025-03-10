@@ -1,48 +1,113 @@
-/* Profile.css */
+/* Move profile container lower to avoid navbar overlap */
 .profile-container {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .profile-header {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .profile-details {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .profile-field {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .profile-field label {
-    font-weight: bold;
-    color: #555;
-  }
-  
-  .profile-field p {
-    margin: 0;
-    color: #333;
-  }
-  
-  .loading {
-    text-align: center;
-    font-size: 1.2em;
-    color: #555;
-    margin-top: 50px;
-  }
+  max-width: 800px;
+  margin: 100px auto 40px; /* Adjust margin-top */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  background: white;
+  text-align: center;
+  position: relative;
+}
+
+/* Profile Content Layout */
+.profile-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* User Info (Left Side) */
+.profile-info {
+  flex: 1;
+  text-align: left;
+}
+
+/* Align Labels and Values in One Row */
+.profile-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.profile-field label {
+  font-weight: bold;
+  width: 120px;
+}
+
+.profile-field span {
+  flex-grow: 1;
+}
+
+/* Profile Image (Right Side) */
+.profile-image img {
+  width: 200px;
+  height: auto;
+  object-fit: cover;
+  border: none;
+}
+
+/* Delete Button */
+.delete-button {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.delete-button:hover {
+  background: darkred;
+}
+
+/* Delete Confirmation Popup */
+.delete-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 1000;
+}
+
+/* Popup Buttons */
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.cancel-button {
+  background: gray;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.confirm-delete-button {
+  background: red;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.confirm-delete-button:hover {
+  background: darkred;
+}
+

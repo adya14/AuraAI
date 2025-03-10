@@ -12,6 +12,11 @@ const router = express.Router();
 router.post('/signup', async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   try {
+    const existingUser = await User.findOne({email});
+
+    if (existingUser){
+      return res.status(400).json({error: "Account already exists with this email. Please log in using your Google account"});
+    }
     const user = new User({ firstName, lastName, email, password });
     await user.save();
 
@@ -30,6 +35,10 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) throw new Error('User not found');
 
+    if(!user.password){
+      return res.status(400).json({error: "The account was created using Google. Please log in using Google."});
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error('Invalid credentials');
 
@@ -44,18 +53,23 @@ router.post('/login', async (req, res) => {
 // Google Auth Routes
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-router.get('/auth/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/' }),
-  (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication failed" });
+router.get('/auth/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    if (err) {
+      console.error("Google OAuth Callback Error:", err);
+      return res.redirect(`http://localhost:3000?error=Server error`);
     }
 
-    // Generate a token with userId in the payload
-    const token = jwt.sign({ userId: req.user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    if (!user) {
+      console.error("Google OAuth Failed:", info?.message || "Unknown reason");
+      return res.redirect(`http://localhost:3000?error=${encodeURIComponent(info?.message || "Authentication failed")}`);
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.redirect(`http://localhost:3000?token=${token}`);
-  }
-);
+  })(req, res, next);
+});
+
 
 // Profile Route (Protected by JWT)
 router.get('/api/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
@@ -76,5 +90,21 @@ router.get('/api/profile', passport.authenticate('jwt', { session: false }), asy
     res.status(500).json({ error: error.message });
   }
 });
+
+// Delete user profile
+router.delete('/api/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 module.exports = router;

@@ -27,24 +27,35 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });
+
     if (!user) {
-      const existingUser = await User.findOne({email: profile.emails[0].value});
-      if (existingUser){
-        return done(null, false, {message: "Account already exists. Please log in with email and password."});
+      const existingUser = await User.findOne({ email: profile.emails[0].value });
+
+      if (existingUser) {
+        return done(null, false, { message: "Account already exists. Please log in with email and password." });
       }
+
+      // Extract first name from email if not provided
+      const extractedFirstName = profile.name?.givenName || profile.emails[0].value.split('@')[0];
+
       user = new User({
         googleId: profile.id,
         email: profile.emails[0].value,
-        firstName: profile.name.givenName,
-        lastName: profile.name.familyName,
+        firstName: extractedFirstName,
+        lastName: profile.name?.familyName || '', // Last name can be empty
+        plan: 'No plan selected' // Set default plan
       });
+
       await user.save();
     }
+
     done(null, user);
   } catch (error) {
+    console.error("Google OAuth Error:", error); // ✅ Log the actual error
     done(error, null);
   }
 }));
+
 
 // JWT strategy
 const jwtOptions = {

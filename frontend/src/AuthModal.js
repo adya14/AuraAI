@@ -25,40 +25,33 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user data
       onAuthSuccess(response.data.user); // Notify parent component of successful auth
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        const endpoint = isLogin ? '/login' : '/signup';
-        try {
-          const payload = isLogin
-            ? { email, password }
-            : { firstName, lastName, email, password };
-      
-          const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          onAuthSuccess(response.data.user);
-          onRequestClose(); // Close modal after success
-        } catch (error) {
-          alert(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
-        }
-      };
-            onRequestClose(); // Close the modal after successful login/signup
+      onRequestClose(); // Close modal after success
     } catch (error) {
-      alert(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
+      const errorMessage = error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed');
+
+      if (errorMessage.includes("Account already exists")) {
+        alert("This email is already registered with Google. Please log in using Google.");
+      } else {
+        alert(errorMessage);
+      }
     }
   };
 
   // Handle Google OAuth login
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
     const token = urlParams.get('token');
+  
+    if (error) {
+      alert(decodeURIComponent(error)); // Show error message
+      window.history.replaceState({}, document.title, window.location.pathname); // Remove error from URL
+    }
+  
     if (token) {
       localStorage.setItem('token', token);
-      // Fetch user data using the token
       axios.get('http://localhost:5000/api/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then(response => {
         const userData = response.data.user;
@@ -70,6 +63,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       });
     }
   }, [onAuthSuccess]);
+  
 
   return (
     <ReactModal
@@ -139,9 +133,21 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       </div>
 
       {/* Close Button */}
-      <button type="button" onClick={onRequestClose} style={{ marginTop: '10px' }}>
-        close
-      </button>
+        <button 
+          type="button" 
+          onClick={onRequestClose} 
+          style={{
+            position: 'absolute',  // Position it absolutely within the modal
+            top: '10px',           // 10px from the top
+            right: '10px',          // 10px from the left
+            background: 'none', 
+            border: 'none', 
+            fontSize: '18px', 
+            cursor: 'pointer'
+          }}
+        >
+          ✖
+        </button>
     </ReactModal>
   );
 };
