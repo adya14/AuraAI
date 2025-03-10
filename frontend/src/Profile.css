@@ -53,7 +53,7 @@
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: red;
+  background: rgb(249, 95, 95);
   color: white;
   border: none;
   padding: 10px 15px;
@@ -64,7 +64,7 @@
 }
 
 .delete-button:hover {
-  background: darkred;
+  background: rgb(255, 37, 37);
 }
 
 /* Delete Confirmation Popup */
@@ -73,7 +73,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: rgba(255, 255, 255, 0.283);
+  backdrop-filter: blur(20px);
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
@@ -98,8 +99,12 @@
   border-radius: 5px;
 }
 
+.cancel-button:hover{
+  background-color: darkslategrey;
+}
+
 .confirm-delete-button {
-  background: red;
+  background: rgb(248, 77, 77);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -111,3 +116,80 @@
   background: darkred;
 }
 
+/* Edit profile */
+.profile-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+  position: relative;
+  z-index: 10;
+  padding-right: 300px;
+}
+
+.edit-button, .delete-button {
+  background: rgb(255, 69, 69);
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.edit-button {
+  background: rgb(87, 174, 255);
+  margin-bottom: 20px;
+}
+
+.edit-button:hover {
+  background: darkblue;
+}
+
+.delete-button:hover {
+  background: darkred;
+}
+
+/* Edit Profile Popup */
+.edit-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.584);
+  backdrop-filter: blur(20px);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 1000;
+}
+
+.edit-popup input {
+  width: 90%;
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Popup Buttons */
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirm-edit-button {
+  background: rgb(64, 185, 250);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.confirm-edit-button:hover {
+  background: rgb(59, 59, 255);
+}
