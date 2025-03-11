@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {faArrowRight, faCalendar} from '@fortawesome/free-solid-svg-icons';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import "./App.css";
 import logo from "./images/logo.png";
@@ -19,6 +20,15 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
   const [user, setUser] = useState(null); // Store user data
   const navigate = useNavigate();
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const toggleFAQ = (index) => {
+    if (activeIndex === index) {
+      setActiveIndex(null); // Collapse the FAQ if it's already open
+    } else {
+      setActiveIndex(index); // Expand the clicked FAQ
+    }
+  };
 
   // Navigate to profile page
   const handleProfileClick = () => {
@@ -107,15 +117,6 @@ function App() {
 
   return (
     <div className="container-fluid">
-      {/* Interactive Cursor */}
-      {/* <div
-        className="cursor"
-        style={{
-          left: `${cursorPosition.x}px`,
-          top: `${cursorPosition.y}px`,
-        }}
-      ></div> */}
-
       {/* Custom Navbar */}
       <nav className="custom-navbar">
         <div className="navbar-left">
@@ -143,7 +144,7 @@ function App() {
             </>
           ) : (
             <button className="signup-button" onClick={() => setIsAuthModalOpen(true)}>
-              Sign Up / Login
+              Login
             </button>
           )}
         </div>
@@ -164,7 +165,20 @@ function App() {
             <header className="hero">
               <h1>The Future of AI-Powered Interviews</h1>
               <p>Experience seamless AI-driven phone interviews to automate your recruiting process.</p>
-              <button className="hero-button" onClick={() => navigate('/pricing')}>Get Started</button>
+              <div className="hero-buttons">
+                <button className="hero-button get-started" onClick={() => navigate('/pricing')}>
+                  Get Started
+                  <span className="icon-arrow">
+                    <FontAwesomeIcon icon={faArrowRight} />
+                  </span> 
+                </button>
+                <button className="hero-button book-call-button" onClick={() => navigate('/contact')}>
+                  Book a Call
+                  <span className="icon-calendar">
+                    <FontAwesomeIcon icon={faCalendar} />
+                  </span>
+                </button>
+              </div>
             </header>
 
             {/* Features Section */}
@@ -185,34 +199,115 @@ function App() {
                 </div>
               </div>
             </section>
-
-            {/* How it works Section */}
+            {/* How It Works Section */}
             <section className="how-it-works">
-              <h2>How It Works</h2>
-              <div className="steps-container">
-                <div className="step">
-                  <h3>1. Schedule an Interview</h3>
-                  <p>Choose a date and time that works for you, and the candidate.</p>
+              <h2>How It Works?</h2>
+              <div className="timeline">
+                {/* Point 1 */}
+                <div className="timeline-item left">
+                  <div className="timeline-content">
+                    <h3>Schedule an Interview</h3>
+                    <p>Choose a date and time that works for you, and the candidate.</p>
+                  </div>
+                  <div className="timeline-circle">1</div>
                 </div>
-                <div className="step">
-                  <h3>2. Enter the details</h3>
-                  <p>Enter the candidates phone number, job description and job role.</p>
+            
+                {/* Point 2 */}
+                <div className="timeline-item right">
+                  <div className="timeline-content">
+                    <h3>Enter the Details</h3>
+                    <p>Enter the candidate's phone number, job description, and job role.</p>
+                  </div>
+                  <div className="timeline-circle">2</div>
                 </div>
-                <div className="step">
-                  <h3>3. Candidate Joins the Interview</h3>
-                  <p>Candidates directly receive a interview via phone call—no downloads required.</p>
+            
+                {/* Point 3 */}
+                <div className="timeline-item left">
+                  <div className="timeline-content">
+                    <h3>Candidate Joins the Interview</h3>
+                    <p>Candidates directly receive an interview via phone call—no downloads required.</p>
+                  </div>
+                  <div className="timeline-circle">3</div>
                 </div>
-                <div className="step">
-                  <h3>4. AI Conducts the Interview</h3>
-                  <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
+            
+                {/* Point 4 */}
+                <div className="timeline-item right">
+                  <div className="timeline-content">
+                    <h3>AI Conducts the Interview</h3>
+                    <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
+                  </div>
+                  <div className="timeline-circle">4</div>
                 </div>
-                <div className="step">
-                  <h3>5. Data-Driven Insights</h3>
-                  <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
+            
+                {/* Point 5 */}
+                <div className="timeline-item left">
+                  <div className="timeline-content">
+                    <h3>Data-Driven Insights</h3>
+                    <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
+                  </div>
+                  <div className="timeline-circle">5</div>
                 </div>
-                <div className="step">
-                  <h3>6. Review and Hire</h3>
-                  <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
+            
+                {/* Point 6 */}
+                <div className="timeline-item right">
+                  <div className="timeline-content">
+                    <h3>Review and Hire</h3>
+                    <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
+                  </div>
+                  <div className="timeline-circle">6</div>
+                </div>
+              </div>
+            </section>
+
+            <section className="faq">
+              <h2>Frequently Asked Questions</h2>
+              <div className="faq-container">
+                <div className={`faq-item ${activeIndex === 0 ? "active" : ""}`}>
+                  <button className="faq-question" onClick={() => toggleFAQ(0)}>
+                    What is Aura AI?
+                    <span className="faq-icon">+</span>
+                  </button>
+                  <div className="faq-answer">
+                    <p>
+                      Aura AI is an AI-powered platform that automates the recruitment process by conducting AI-driven phone interviews.
+                    </p>
+                  </div>
+                </div>      
+      
+                <div className={`faq-item ${activeIndex === 1 ? "active" : ""}`}>
+                  <button className="faq-question" onClick={() => toggleFAQ(1)}>
+                    How does Aura AI work?
+                    <span className="faq-icon">+</span>
+                  </button>
+                  <div className="faq-answer">
+                    <p>
+                      Aura AI uses advanced natural language processing (NLP) to conduct interviews, evaluate responses, and provide detailed analytics.
+                    </p>
+                  </div>
+                </div>      
+      
+                <div className={`faq-item ${activeIndex === 2 ? "active" : ""}`}>
+                  <button className="faq-question" onClick={() => toggleFAQ(2)}>
+                    Is Aura AI free to use?
+                    <span className="faq-icon">+</span>
+                  </button>
+                  <div className="faq-answer">
+                    <p>
+                      Aura AI offers a free trial for new users. After the trial, you can choose from our affordable pricing plans.
+                    </p>
+                  </div>
+                </div>      
+      
+                <div className={`faq-item ${activeIndex === 3 ? "active" : ""}`}>
+                  <button className="faq-question" onClick={() => toggleFAQ(3)}>
+                    Can I customize the interview questions?
+                    <span className="faq-icon">+</span>
+                  </button>
+                  <div className="faq-answer">
+                    <p>
+                      Yes, you can customize the interview questions based on the job role and requirements.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
