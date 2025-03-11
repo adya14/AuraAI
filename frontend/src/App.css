@@ -40,7 +40,7 @@ body {
 
 .nav-links-container {
   display: flex;
-  background-color: rgb(30, 29, 29); /* Dark background for nav links */
+  background-color: rgb(42, 42, 42); /* Dark background for nav links */
   padding: 10px 30px;
   border-radius: 25px; /* Rounded edges */
   box-shadow: 0 2px 10px rgba(10, 10, 10, 0.1); /* Subtle shadow */
@@ -81,11 +81,12 @@ body {
   font-family: "Merriweather", serif; /* Apply Merriweather font */
   font-size: 3rem;
   margin-bottom: 20px;
+  color: #484848;
 }
 
 .hero p {
-  font-family: "Merriweather", serif; /* Apply Merriweather font */
-  font-size: 1.5rem;
+  /* font-family: "Merriweather", serif; */
+  font-size: 1.2rem;
   color: #555;
   margin-bottom: 40px;
 }
@@ -100,7 +101,7 @@ body {
 
 /* Base Button Style */
 .hero-button {
-  background-color: #252525; /* Blue background */
+  background-color: #343434; /* Blue background */
   color: white; /* White text */
   padding: 10px 35px;
   font-family: "Lato", sans-serif; /* Use Lato for buttons */
@@ -126,7 +127,7 @@ body {
 
 /* Book a Call Button Specific Styles */
 .book-call-button {
-  background-color: #252525; /* Green background */
+  background-color: #343434; /* Green background */
   padding-right: 15px;
   padding-left: 25px;
 }
@@ -160,7 +161,7 @@ body {
 
 /* Features Section */
 .features {
-  padding: 6px 8%;
+  padding: 50px 8%;
   text-align: center;
   background-color: rgb(250, 250, 250);
 }
@@ -199,107 +200,78 @@ body {
   color: #555;
 }
 
-/* How It Works Section */
+/* How it works */
 .how-it-works {
-  padding: 80px 5%;
+  padding: 60px 20px;
   text-align: center;
-  background-color: rgb(250, 250, 250);
-  padding-bottom: 1px;
 }
 
 .how-it-works h2 {
-  font-size: 2.1rem;
-  margin-bottom: 40px;
   font-family: "Merriweather", serif;
+  font-size: 2rem;
+  margin-bottom: 40px;
 }
 
-/* Timeline Container */
-.timeline {
-  position: relative;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Timeline Line */
-.timeline::before {
-  content: '';
-  position: absolute;
-  top: 50px; /* Start from the center of the first circle */
-  left: 50%;
-  width: 2px;
-  background-color: #8fc5ff; /* Blue line */
-  transform: translateX(-50%);
-  height: calc(100% - 110px); /* Adjust height to end at the center of the last circle */
-}
-
-/* Timeline Item */
-.timeline-item {
-  padding: 20px 40px;
-  position: relative;
-  width: 43%;
-}
-
-/* Left-Aligned Items */
-.timeline-item.left {
-  left: 0;
-  text-align: right;
-}
-
-/* Right-Aligned Items */
-.timeline-item.right {
-  left: 50%;
-  text-align: left;
-}
-
-/* Timeline Circle */
-.timeline-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #81beff; /* Blue background */
-  color: white; /* White text */
+/* Common styles for all points */
+.point {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Circle Position for Left Items */
-.timeline-item.left .timeline-circle {
-  right: -20px; /* Position to the right of the line */
-}
-
-/* Circle Position for Right Items */
-.timeline-item.right .timeline-circle {
-  left: -20px; /* Position to the left of the line */
-}
-
-/* Timeline Content */
-.timeline-content {
-  background-color: #ffffff00; /* White background */
+  justify-content: space-between;
+  max-width: 1000px;
+  margin: 0 auto 60px; /* Add spacing between points */
   padding: 20px;
-  border-radius: 10px; /* Rounded corners */
+  position: relative; /* For the horizontal line */
 }
 
-.timeline-content h3 {
-  font-size: 1.1rem;
-  margin: 0 0 10px 0; /* Space below heading */
-  color: #333; /* Dark text */
+/* Horizontal line between points */
+.point:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; /* Position the line below the point */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%; /* Adjust the width of the line */
+  height: 1px;
+  background-color: #ccc; /* Line color */
 }
 
-.timeline-content p {
+/* Point content (heading and description) */
+.point-content {
+  flex: 1;
+  max-width: 60%; /* Limit width for better readability */
+}
+
+.point-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.point-content p {
   font-size: 1rem;
-  color: #555; /* Gray text */
-  margin: 0; /* Remove default margin */
+  color: #666;
 }
 
+/* Huge number styling */
+.point-number {
+  font-size: 10rem; /* Huge number */
+  font-weight: bold;
+  color: #dbdbdb; /* Light gray color for subtlety */
+  z-index: -1; /* Push it behind the content */
+  user-select: none; /* Prevent text selection */
+}
+
+/* Alternating layout for odd and even points */
+.point:nth-child(odd) {
+  flex-direction: row; 
+}
+
+.point:nth-child(even) {
+  flex-direction: row-reverse; 
+}
 /* FAQ Section */
 .faq {
-  padding: 60px 5%;
+  padding-top: 20px;
+  padding-bottom: 50px;
   text-align: center;
   background-color: rgb(250, 250, 250);
 }

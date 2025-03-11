@@ -199,66 +199,65 @@ function App() {
                 </div>
               </div>
             </section>
-            {/* How It Works Section */}
-            <section className="how-it-works">
-              <h2>How It Works?</h2>
-              <div className="timeline">
-                {/* Point 1 */}
-                <div className="timeline-item left">
-                  <div className="timeline-content">
-                    <h3>Schedule an Interview</h3>
-                    <p>Choose a date and time that works for you, and the candidate.</p>
-                  </div>
-                  <div className="timeline-circle">1</div>
-                </div>
-            
-                {/* Point 2 */}
-                <div className="timeline-item right">
-                  <div className="timeline-content">
-                    <h3>Enter the Details</h3>
-                    <p>Enter the candidate's phone number, job description, and job role.</p>
-                  </div>
-                  <div className="timeline-circle">2</div>
-                </div>
-            
-                {/* Point 3 */}
-                <div className="timeline-item left">
-                  <div className="timeline-content">
-                    <h3>Candidate Joins the Interview</h3>
-                    <p>Candidates directly receive an interview via phone call—no downloads required.</p>
-                  </div>
-                  <div className="timeline-circle">3</div>
-                </div>
-            
-                {/* Point 4 */}
-                <div className="timeline-item right">
-                  <div className="timeline-content">
-                    <h3>AI Conducts the Interview</h3>
-                    <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
-                  </div>
-                  <div className="timeline-circle">4</div>
-                </div>
-            
-                {/* Point 5 */}
-                <div className="timeline-item left">
-                  <div className="timeline-content">
-                    <h3>Data-Driven Insights</h3>
-                    <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
-                  </div>
-                  <div className="timeline-circle">5</div>
-                </div>
-            
-                {/* Point 6 */}
-                <div className="timeline-item right">
-                  <div className="timeline-content">
-                    <h3>Review and Hire</h3>
-                    <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
-                  </div>
-                  <div className="timeline-circle">6</div>
-                </div>
-              </div>
-            </section>
 
+{/* How it works */}
+<section className="how-it-works">
+  <h2>How It Works</h2>
+  
+  {/* Point 1 */}
+  <div className="point point-1">
+    <div className="point-content">
+      <h3>Schedule an Interview</h3>
+      <p>Choose a date and time that works for you, and the candidate.</p>
+    </div>
+    <div className="point-number">1</div>
+  </div>
+
+  {/* Point 2 */}
+  <div className="point point-2">
+    <div className="point-number">2</div>
+    <div className="point-content">
+      <h3>Enter the Details</h3>
+      <p>Enter the candidate's phone number, job description, and job role.</p>
+    </div>
+  </div>
+
+  {/* Point 3 */}
+  <div className="point point-3">
+    <div className="point-content">
+      <h3>Candidate Joins the Interview</h3>
+      <p>Candidates directly receive an interview via phone call—no downloads required.</p>
+    </div>
+    <div className="point-number">3</div>
+  </div>
+
+  {/* Point 4 */}
+  <div className="point point-4">
+    <div className="point-number">4</div>
+    <div className="point-content">
+      <h3>AI Conducts the Interview</h3>
+      <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
+    </div>
+  </div>
+
+  {/* Point 5 */}
+  <div className="point point-5">
+    <div className="point-content">
+      <h3>Data-Driven Insights</h3>
+      <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
+    </div>
+    <div className="point-number">5</div>
+  </div>
+
+  {/* Point 6 */}
+  <div className="point point-6">
+    <div className="point-number">6</div>
+    <div className="point-content">
+      <h3>Review and Hire</h3>
+      <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
+    </div>
+  </div>
+</section>
             <section className="faq">
               <h2>Frequently Asked Questions</h2>
               <div className="faq-container">
