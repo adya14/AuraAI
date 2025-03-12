@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faArrowRight, faCalendar, faArrowRightFromBracket} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faCalendar, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faUser } from '@fortawesome/free-regular-svg-icons';
 import "./App.css";
 import logo from "./images/logo.png";
@@ -74,16 +74,16 @@ function App() {
           Authorization: `Bearer ${tokenFromUrl}`,
         },
       })
-      .then(response => {
-        const userData = response.data.user;
-        localStorage.setItem('user', JSON.stringify(userData));
-        setIsAuthenticated(true);
-        setUser(userData);
-        navigate('/'); // Redirect to home after successful login
-      })
-      .catch(error => {
-        console.error('Error fetching user profile:', error);
-      });
+        .then(response => {
+          const userData = response.data.user;
+          localStorage.setItem('user', JSON.stringify(userData));
+          setIsAuthenticated(true);
+          setUser(userData);
+          navigate('/'); // Redirect to home after successful login
+        })
+        .catch(error => {
+          console.error('Error fetching user profile:', error);
+        });
     }
 
   }, [navigate]);
@@ -115,7 +115,16 @@ function App() {
         <div className="navbar-center">
           <div className="nav-links-container">
             <Link to="/" className="nav-link">Home</Link>
-            <Link to="/pricing" className="nav-link">Pricing</Link>
+            <Link
+              to="/"
+              className="nav-link"
+              onClick={(e) => {
+                e.preventDefault(); // Prevent default navigation
+                document.getElementById("pricing").scrollIntoView({ behavior: "smooth" }); // Smooth scroll to pricing section
+              }}
+            >
+              Pricing
+            </Link>
             <Link to="/contact" className="nav-link">Contact</Link>
           </div>
         </div>
@@ -124,13 +133,13 @@ function App() {
           {isAuthenticated ? (
             <>
               <button className="profile-button" onClick={handleProfileClick}>
-                <FontAwesomeIcon icon={faUser} className="user-icon" /> 
-                <span></span>
+                <FontAwesomeIcon icon={faUser} className="user-icon" />
+                <span className="profile-text">Profile</span>
               </button>
               <button className="logout-button" onClick={handleLogout}>
                 <div className="logout-button-content">
-                  <FontAwesomeIcon icon={faArrowRightFromBracket} className="logout-icon"/> {/* Use the imported icon here */}
-                  <span></span>
+                  <FontAwesomeIcon icon={faArrowRightFromBracket} className="logout-icon" /> {/* Use the imported icon here */}
+                  <span className="logout-text">Log Out</span>
                 </div>
               </button>
             </>
@@ -158,12 +167,17 @@ function App() {
               <h1>The Future of AI-Powered Interviews</h1>
               <p>Experience seamless AI-driven phone interviews to automate your recruiting process.</p>
               <div className="hero-buttons">
-                <button className="hero-button get-started" onClick={() => navigate('/pricing')}>
-                  Get Started
-                  <span className="icon-arrow">
-                    <FontAwesomeIcon icon={faArrowRight} />
-                  </span> 
-                </button>
+              <button
+                className="hero-button get-started"
+                onClick={() => {
+                  document.getElementById("pricing").scrollIntoView({ behavior: "smooth" }); // Smooth scroll to pricing section
+                }}
+              >
+                Get Started
+                <span className="icon-arrow">
+                  <FontAwesomeIcon icon={faArrowRight} />
+                </span>
+              </button>
                 <button className="hero-button book-call-button" onClick={() => navigate('/contact')}>
                   Book a Call
                   <span className="icon-calendar">
@@ -192,66 +206,78 @@ function App() {
               </div>
             </section>
 
-{/* How it works */}
-<section className="how-it-works">
-  <h2>How It Works</h2>
-  
-  {/* Point 1 */}
-  <div className="point point-1">
-    <div className="point-content">
-      <h3>Schedule an Interview</h3>
-      <p>Choose a date and time that works for you, and the candidate.</p>
-    </div>
-    <div className="point-number">
-    <div className="point-number">01</div>
-  </div>
-    </div>
+            <Pricing></Pricing>
 
-  {/* Point 2 */}
-  <div className="point point-2">
-    <div className="point-number">02</div>
-    <div className="point-content">
-      <h3>Enter the Details</h3>
-      <p>Enter the candidate's phone number, job description, and job role.</p>
-    </div>
-  </div>
-
-  {/* Point 3 */}
-  <div className="point point-3">
-    <div className="point-content">
-      <h3>Candidate Joins the Interview</h3>
-      <p>Candidates directly receive an interview via phone call—no downloads required.</p>
-    </div>
-    <div className="point-number">03</div>
-  </div>
-
-  {/* Point 4 */}
-  <div className="point point-4">
-    <div className="point-number">04</div>
-    <div className="point-content">
-      <h3>AI Conducts the Interview</h3>
-      <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
-    </div>
-  </div>
-
-  {/* Point 5 */}
-  <div className="point point-5">
-    <div className="point-content">
-      <h3>Data-Driven Insights</h3>
-      <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
-    </div>
-    <div className="point-number">05</div>
-  </div>
-
-  {/* Point 6 */}
-  <div className="point point-6">
-    <div className="point-number">06</div>
-    <div className="point-content">
-      <h3>Review and Hire</h3>
-      <p>Compare candidates and make confident hiring decisions with all the data you need.</p>
-    </div>
-  </div>
-</section>
+            {/* How it works */}
+             <section className="how-it-works">
+               <h2>How It Works</h2>
+             
+               {/* Point 1 */}
+               <div className="point point-1">
+                 <div className="point-content">
+                   <h3>Schedule an Interview</h3>
+                   <p>
+                     Easily schedule interviews at your convenience. Select a date and time that works best for both you and the candidate. Our system ensures seamless scheduling with automated reminders for both parties.
+                   </p>
+                 </div>
+                 <div className="point-number">01</div>
+               </div>
+             
+               {/* Point 2 */}
+               <div className="point point-2">
+                 <div className="point-number">02</div>
+                 <div className="point-content">
+                   <h3>Enter Candidate Details</h3>
+                   <p>
+                     Provide the candidate's phone number, job description, and role specifics. Our AI uses this information to tailor the interview questions, ensuring a personalized and relevant experience for each candidate.
+                   </p>
+                 </div>
+               </div>
+             
+               {/* Point 3 */}
+               <div className="point point-3">
+                 <div className="point-content">
+                   <h3>Candidate Joins the Interview</h3>
+                   <p>
+                     Candidates receive a direct phone call at the scheduled time—no apps or downloads required. They can join the interview from anywhere, making the process hassle-free and accessible.
+                   </p>
+                 </div>
+                 <div className="point-number">03</div>
+               </div>
+             
+               {/* Point 4 */}
+               <div className="point point-4">
+                 <div className="point-number">04</div>
+                 <div className="point-content">
+                   <h3>AI Conducts the Interview</h3>
+                   <p>
+                     Our advanced AI conducts the interview, asking tailored questions based on the job role. It evaluates responses in real-time, adapts the conversation, and ensures a natural and engaging interaction.
+                   </p>
+                 </div>
+               </div>
+             
+               {/* Point 5 */}
+               <div className="point point-5">
+                 <div className="point-content">
+                   <h3>Data-Driven Insights</h3>
+                   <p>
+                     After the interview, receive a comprehensive report with detailed scores, insights, and recommendations. Our AI analyzes key metrics such as communication skills, technical knowledge, and cultural fit.
+                   </p>
+                 </div>
+                 <div className="point-number">05</div>
+               </div>
+             
+               {/* Point 6 */}
+               <div className="point point-6">
+                 <div className="point-number">06</div>
+                 <div className="point-content">
+                   <h3>Review and Hire</h3>
+                   <p>
+                     Compare candidates effortlessly using the data provided. Make confident hiring decisions backed by actionable insights, ensuring you select the best fit for your team.
+                   </p>
+                 </div>
+               </div>
+             </section>
             <section className="faq">
               <h2>Frequently Asked Questions</h2>
               <div className="faq-container">
@@ -265,8 +291,7 @@ function App() {
                       Aura AI is an AI-powered platform that automates the recruitment process by conducting AI-driven phone interviews.
                     </p>
                   </div>
-                </div>      
-      
+                </div>
                 <div className={`faq-item ${activeIndex === 1 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(1)}>
                     How does Aura AI work?
@@ -277,8 +302,8 @@ function App() {
                       Aura AI uses advanced natural language processing (NLP) to conduct interviews, evaluate responses, and provide detailed analytics.
                     </p>
                   </div>
-                </div>      
-      
+                </div>
+
                 <div className={`faq-item ${activeIndex === 2 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(2)}>
                     Is Aura AI free to use?
@@ -289,8 +314,8 @@ function App() {
                       Aura AI offers a free trial for new users. After the trial, you can choose from our affordable pricing plans.
                     </p>
                   </div>
-                </div>      
-      
+                </div>
+
                 <div className={`faq-item ${activeIndex === 3 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(3)}>
                     Can I customize the interview questions?
@@ -306,7 +331,7 @@ function App() {
             </section>
           </>
         } />
-        <Route path="/pricing" element={<Pricing />} />
+        {/* <Route path="/pricing" element={<Pricing />} /> */}
         <Route path="/contact" element={<Contact />} />
         <Route
           path="/profile"

@@ -170,6 +170,7 @@ body {
   font-size: 2.1rem;
   margin-bottom: 40px;
   font-family: "Merriweather", serif;
+  color: #484848;
 }
 
 .feature-cards {
@@ -209,6 +210,7 @@ body {
 .how-it-works h2 {
   font-family: "Merriweather", serif;
   font-size: 2rem;
+  color: #484848;
   margin-bottom: 40px;
 }
 
@@ -281,6 +283,7 @@ body {
   font-size: 2.1rem;
   margin-bottom: 40px;
   font-family: "Merriweather", serif;
+  color: #484848;
 }
 
 .faq-container {
@@ -574,11 +577,12 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  margin-left: auto;
+  margin-right: 20px;
   display: flex;
-  flex-direction: column; /* Stack icon and text vertically */
-  align-items: center; /* Center items horizontally */
-  gap: 4px; /* Space between icon and text */
+  flex-direction: column; 
+  align-items: center;
+  gap: 4px; 
   margin-right: 10px;
 }
 
@@ -586,38 +590,38 @@ body {
   width: 18px; /* Adjust size as needed */
   height: 18px;
   color: #333; /* Adjust color as needed */
+  transition: color 0.3s ease; /* Smooth color transition */
 }
 
-/* Profile text styling */
-.profile-button span {
+/* Profile text */
+.profile-text {
   font-size: 12px; /* Adjust text size */
-  color: #333; /* Adjust text color */
+  opacity: 0; /* Hide text by default */
+  transition: opacity 0.3s ease; /* Smooth fade-in effect */
 }
 
 /* Hover effect */
 .profile-button:hover .user-icon {
-  color: #007bff; /* Change color on hover */
+  color: #007bff; /* Change icon color on hover */
+}
+
+.profile-button:hover .profile-text {
+  opacity: 1; /* Show text on hover */
 }
 
 /* Logout button */
 .logout-button {
   background: none;
-  border: none; /* Remove border */
+  border: none;
   color: #333;
-  padding: 8px;
-  margin-right: 30px;
+  padding-right: 30px;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.logout-button:hover .logout-icon {
-  color: #007bff; 
-}
-
+/* Logout button content */
 .logout-button-content {
   display: flex;
   flex-direction: column; /* Stack icon and text vertically */
@@ -625,11 +629,24 @@ body {
   gap: 4px; /* Space between icon and text */
 }
 
-.logout-button-content svg {
-  font-size: 15px; /* Adjust icon size */
+/* Logout icon */
+.logout-icon {
+  font-size: 18px; /* Adjust icon size */
+  transition: color 0.3s ease; /* Smooth color transition */
 }
 
-.logout-button-content span {
+/* Logout text */
+.logout-text {
   font-size: 12px; /* Adjust text size */
+  opacity: 0; /* Hide text by default */
+  transition: opacity 0.3s ease; /* Smooth fade-in effect */
 }
 
+/* Hover effect */
+.logout-button:hover .logout-icon {
+  color: #007bff; /* Change icon color on hover */
+}
+
+.logout-button:hover .logout-text {
+  opacity: 1; /* Show text on hover */
+}

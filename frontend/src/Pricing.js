@@ -6,7 +6,31 @@ import axios from "axios";
 const Pricing = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [activeCard, setActiveCard] = useState(1); // Track the active card (1: middle, 0: left, 2: right)
+  const [activeIndex, setActiveIndex] = useState(1); // Track the active card index (0: left, 1: middle, 2: right)
+
+  const cards = [
+    {
+      title: "Basic Plan",
+      price: "₹999/month",
+      features: ["50 AI Interviews per month", "Basic Analytics", "Email Support"],
+      plan: "Basic Plan",
+      amount: 999,
+    },
+    {
+      title: "Pro Plan",
+      price: "₹4999/month",
+      features: ["250 AI Interviews per month", "Advanced Analytics", "Priority Support"],
+      plan: "Pro Plan",
+      amount: 4999,
+    },
+    {
+      title: "Quantum Flex Plan",
+      price: "Pay as you go",
+      features: ["Unlimited AI Interviews", "Advanced Analytics", "Priority Support"],
+      plan: "Quantum Flex Plan",
+      amount: 10000,
+    },
+  ];
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -62,60 +86,46 @@ const Pricing = () => {
     }
   };
 
+  // Handle card click
+  const handleCardClick = (index) => {
+    setActiveIndex(index);
+  };
+
   return (
+    <section id="pricing" className="pricing">
     <div className="pricing">
       <h1>Pricing</h1>
       <div className="pricing-cards">
-        {/* Left Card */}
-        <div
-          className={`card ${activeCard === 0 ? "active" : ""}`}
-          onClick={() => setActiveCard(0)}
-        >
-          <h2>Basic Plan</h2>
-          <p>₹999/month</p>
-          <ul>
-            <li>50 AI Interviews per month</li>
-            <li>Basic Analytics</li>
-            <li>Email Support</li>
-          </ul>
-          <button className="pricing-button" onClick={() => handleBuyNow("Basic Plan", 999)}>
-            Buy Now
-          </button>
-        </div>
+        {cards.map((card, index) => {
+          // Calculate the position of the card based on the active index
+          let position = index - activeIndex;
+          if (position < -1) position += 3; // Wrap around to the right
+          if (position > 1) position -= 3; // Wrap around to the left
 
-        {/* Middle Card */}
-        <div
-          className={`card ${activeCard === 1 ? "active" : ""}`}
-          onClick={() => setActiveCard(1)}
-        >
-          <h2>Pro Plan</h2>
-          <p>₹4999/month</p>
-          <ul>
-            <li>250 AI Interviews per month</li>
-            <li>Advanced Analytics</li>
-            <li>Priority Support</li>
-          </ul>
-          <button className="pricing-button" onClick={() => handleBuyNow("Pro Plan", 4999)}>
-            Buy Now
-          </button>
-        </div>
-
-        {/* Right Card */}
-        <div
-          className={`card ${activeCard === 2 ? "active" : ""}`}
-          onClick={() => setActiveCard(2)}
-        >
-          <h2>Quantum Flex Plan</h2>
-          <p>Pay as you go</p>
-          <ul>
-            <li>Unlimited AI Interviews</li>
-            <li>Advanced Analytics</li>
-            <li>Priority Support</li>
-          </ul>
-          <button className="pricing-button" onClick={() => handleBuyNow("Quantum Flex Plan", 10000)}>
-            Buy Now
-          </button>
-        </div>
+          return (
+            <div
+              key={index}
+              className={`card ${activeIndex === index ? "active" : ""}`}
+              onClick={() => handleCardClick(index)}
+              style={{
+                transform: `translateX(${position * 80}%) scale(${activeIndex === index ? 1 : 0.85})`, // Reduced X translation and scale
+                zIndex: activeIndex === index ? 3 : 1,
+                opacity: activeIndex === index ? 1 : 0.6, // Increased visibility for side cards
+              }}
+            > 
+              <h2>{card.title}</h2>
+              <p>{card.price}</p>
+              <ul>
+                {card.features.map((feature, i) => (
+                  <li key={i}>{feature}</li>
+                ))}
+              </ul>
+              <button className="pricing-button" onClick={() => handleBuyNow(card.plan, card.amount)}>
+                Buy Now
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {/* Authentication Modal */}
@@ -124,6 +134,7 @@ const Pricing = () => {
         onRequestClose={() => setIsAuthModalOpen(false)}
       />
     </div>
+    </section>
   );
 };
 
