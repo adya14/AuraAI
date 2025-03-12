@@ -11,7 +11,7 @@ import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
 import AuthModal from './AuthModal';
-import Profile from './profile';
+import ProfileModal from './profile';
 import axios from 'axios';
 
 function App() {
@@ -20,6 +20,7 @@ function App() {
   const [user, setUser] = useState(null); // Store user data
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const toggleFAQ = (index) => {
     if (activeIndex === index) {
@@ -31,7 +32,7 @@ function App() {
 
   // Navigate to profile page
   const handleProfileClick = () => {
-    navigate('/profile');
+    setIsProfileModalOpen(true);
   };
 
   // Handle logout
@@ -114,7 +115,7 @@ function App() {
         </div>
         <div className="navbar-center">
           <div className="nav-links-container">
-            <Link to="/" className="nav-link">Home</Link>
+            <Link to="/" className="nav-link">HOME</Link>
             <Link
               to="/"
               className="nav-link"
@@ -123,32 +124,40 @@ function App() {
                 document.getElementById("pricing").scrollIntoView({ behavior: "smooth" }); // Smooth scroll to pricing section
               }}
             >
-              Pricing
+              PRICING
             </Link>
-            <Link to="/contact" className="nav-link">Contact</Link>
+            <Link to="/contact" className="nav-link">CONTACT</Link>
           </div>
         </div>
         <div className="navbar-right">
-          {console.log('isAuthenticated:', isAuthenticated)} {/* Debugging */}
-          {isAuthenticated ? (
-            <>
-              <button className="profile-button" onClick={handleProfileClick}>
-                <FontAwesomeIcon icon={faUser} className="user-icon" />
-                <span className="profile-text">Profile</span>
-              </button>
-              <button className="logout-button" onClick={handleLogout}>
-                <div className="logout-button-content">
-                  <FontAwesomeIcon icon={faArrowRightFromBracket} className="logout-icon" /> {/* Use the imported icon here */}
-                  <span className="logout-text">Log Out</span>
-                </div>
-              </button>
-            </>
-          ) : (
-            <button className="signup-button" onClick={() => setIsAuthModalOpen(true)}>
-              Login
-            </button>
-          )}
+  {console.log('isAuthenticated:', isAuthenticated)} {/* Debugging */}
+  {isAuthenticated ? (
+    <>
+      {/* Profile Button */}
+      <button className="profile-button" onClick={handleProfileClick}>
+        <FontAwesomeIcon icon={faUser} className="user-icon" />
+        <span>profile</span>
+      </button>
+
+      {/* Logout Button */}
+      <button className="logout-button" onClick={handleLogout}>
+        <div className="logout-button-content">
+          <FontAwesomeIcon icon={faArrowRightFromBracket} className="logout-icon" />
+          <span>logout</span>
         </div>
+      </button>
+
+      {/* Profile Modal */}
+      {isProfileModalOpen && (
+        <ProfileModal onClose={() => setIsProfileModalOpen(false)} />
+      )}
+    </>
+  ) : (
+    <button className="signup-button" onClick={() => setIsAuthModalOpen(true)}>
+      Login
+    </button>
+  )}
+</div>
       </nav>
 
       {/* Auth Modal */}
@@ -210,7 +219,7 @@ function App() {
 
             {/* How it works */}
              <section className="how-it-works">
-               <h2>How It Works</h2>
+               <h2>How It Works?</h2>
              
                {/* Point 1 */}
                <div className="point point-1">
@@ -337,7 +346,7 @@ function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <Profile />
+              <ProfileModal />
             </ProtectedRoute>
           }
         />

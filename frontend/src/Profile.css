@@ -1,195 +1,207 @@
-/* Move profile container lower to avoid navbar overlap */
-.profile-container {
-  max-width: 800px;
-  margin: 100px auto 40px; /* Adjust margin-top */
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  background: white;
-  text-align: center;
-  position: relative;
+/* Profile.css */
+body {
+  font-family: "Lato", sans-serif; /* Use Lato for buttons */
+  margin: 0;
+  padding: 0;
 }
 
-/* Profile Content Layout */
-.profile-content {
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  z-index: 1000;
 }
 
-/* User Info (Left Side) */
+.profile-container {
+  background-color: #f7f7f7;
+  /* backdrop-filter: blur(20px); */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 500px;
+  overflow: hidden;
+  position: relative;
+  padding: 5px
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #4b4b4b;
+}
+
+.close-button:hover {
+  color: #000000;
+}
+
+.profile-header-section {
+  height: 130px;
+  background-color: #addaff;
+  /* background: linear-gradient(135deg, #d5adff, #86b2ff); */
+  border-radius: 10px;
+}
+
+.profile-image {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #fff;
+  background-color: #fdfdfd;
+}
+
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-content {
+  padding: 80px 20px 20px;
+  text-align: center;
+}
+
 .profile-info {
-  flex: 1;
-  text-align: left;
+  margin-bottom: 20px;
 }
 
-/* Align Labels and Values in One Row */
 .profile-field {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
 }
 
 .profile-field label {
   font-weight: bold;
-  width: 120px;
+  color: #333;
+  width: 150px;
+  margin-right: 10px;
+  flex-shrink: 0; 
+  text-align: left;
 }
 
 .profile-field span {
-  flex-grow: 1;
-}
-
-/* Profile Image (Right Side) */
-.profile-image img {
+  color: #666;
   width: 200px;
-  height: auto;
-  object-fit: cover;
-  border: none;
+  margin-right: 30px;
+  flex-shrink: 0; 
 }
 
-/* Delete Button */
-.delete-button {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgb(249, 95, 95);
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  font-size: 14px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.delete-button:hover {
-  background: rgb(255, 37, 37);
-}
-
-/* Delete Confirmation Popup */
-.delete-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.283);
-  backdrop-filter: blur(20px);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  z-index: 1000;
-}
-
-/* Popup Buttons */
-.popup-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 15px;
-}
-
-.cancel-button {
-  background: gray;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  margin-right: 10px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.cancel-button:hover{
-  background-color: darkslategrey;
-}
-
-.confirm-delete-button {
-  background: rgb(248, 77, 77);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.confirm-delete-button:hover {
-  background: darkred;
-}
-
-/* Edit profile */
 .profile-buttons {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-top: 25px;
-  position: relative;
-  z-index: 10;
-  padding-right: 300px;
+  gap: 10px;
 }
 
 .edit-button, .delete-button {
-  background: rgb(255, 69, 69);
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  font-size: 14px;
-  border-radius: 5px;
+  padding: 10px 20px;
+  border: none; /* Remove default border */
+  border-radius: 15px; /* Rounded corners */
   cursor: pointer;
-  transition: 0.3s ease;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #e0e0e0; /* Base background color */
+  box-shadow: 5px 5px 10px #d6d6d6, -5px -5px 10px #ffffff; /* Neomorphism shadow */
+  color: #3f3f3f; /* Text color */
 }
 
-.edit-button {
-  background: rgb(87, 174, 255);
-  margin-bottom: 20px;
+.edit-button:hover, .delete-button:hover {
+  background: #d9d9d9; /* Keep the same background on hover */
+  /* box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff; */
+  color: #3f3f3f; /* Keep the same text color on hover */
 }
 
-.edit-button:hover {
-  background: darkblue;
+.edit-button:active, .delete-button:active {
+  box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff; /* Inset shadow for active/pressed state */
+  transform: scale(0.98); /* Slightly shrink the button when clicked */
 }
 
-.delete-button:hover {
-  background: darkred;
-}
-
-/* Edit Profile Popup */
-.edit-popup {
+.edit-popup, .delete-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.584);
-  backdrop-filter: blur(20px);
+  background-color: #fff;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  width: 300px;
   text-align: center;
-  z-index: 1000;
+}
+
+.edit-popup h3, .delete-popup p {
+  margin-bottom: 20px;
+  color: #333;
 }
 
 .edit-popup input {
-  width: 90%;
-  margin: 10px 0;
-  padding: 8px;
-  border: 1px solid #ccc;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
   border-radius: 5px;
+  font-size: 14px;
 }
 
-/* Popup Buttons */
 .popup-buttons {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
-.confirm-edit-button {
-  background: rgb(64, 185, 250);
-  color: white;
+.cancel-button, .confirm-edit-button, .confirm-delete-button {
+  padding: 10px 20px;
   border: none;
-  padding: 8px 12px;
-  cursor: pointer;
   border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-button {
+  background-color: #ddd;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #ccc;
+}
+
+.confirm-edit-button {
+  background-color: #2575fc;
+  color: #fff;
 }
 
 .confirm-edit-button:hover {
-  background: rgb(59, 59, 255);
+  background-color: #1a5bbf;
+}
+
+.confirm-delete-button {
+  background-color: #ff4d4d;
+  color: #fff;
+}
+
+.confirm-delete-button:hover {
+  background-color: #cc0000;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

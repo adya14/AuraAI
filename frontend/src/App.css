@@ -577,13 +577,14 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  margin-left: auto;
-  margin-right: 20px;
+  padding: 0;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   align-items: center;
   gap: 4px; 
   margin-right: 10px;
+  margin-right: 10px;
+  position: relative;
 }
 
 .user-icon {
@@ -593,11 +594,14 @@ body {
   transition: color 0.3s ease; /* Smooth color transition */
 }
 
-/* Profile text */
-.profile-text {
-  font-size: 12px; /* Adjust text size */
-  opacity: 0; /* Hide text by default */
-  transition: opacity 0.3s ease; /* Smooth fade-in effect */
+.profile-button span {
+  font-size: 12px;
+  color: #333;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  position: absolute;
+  top: 24px; /* Position text below icon */
 }
 
 /* Hover effect */
@@ -605,8 +609,9 @@ body {
   color: #007bff; /* Change icon color on hover */
 }
 
-.profile-button:hover .profile-text {
-  opacity: 1; /* Show text on hover */
+.profile-button:hover span {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Logout button */
@@ -614,32 +619,26 @@ body {
   background: none;
   border: none;
   color: #333;
-  padding-right: 30px;
   cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  position: relative;
+  padding-right: 16px;
+  margin-right: 30px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
-/* Logout button content */
-.logout-button-content {
-  display: flex;
-  flex-direction: column; /* Stack icon and text vertically */
-  align-items: center;
-  gap: 4px; /* Space between icon and text */
-}
-
-/* Logout icon */
-.logout-icon {
-  font-size: 18px; /* Adjust icon size */
-  transition: color 0.3s ease; /* Smooth color transition */
-}
-
-/* Logout text */
-.logout-text {
-  font-size: 12px; /* Adjust text size */
-  opacity: 0; /* Hide text by default */
-  transition: opacity 0.3s ease; /* Smooth fade-in effect */
+.logout-button span {
+  font-size: 12px;
+  color: #333;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  position: absolute;
+  top: 24px;
+  transform: translateX(-50%);
 }
 
 /* Hover effect */
@@ -647,6 +646,7 @@ body {
   color: #007bff; /* Change icon color on hover */
 }
 
-.logout-button:hover .logout-text {
-  opacity: 1; /* Show text on hover */
+.logout-button:hover span {
+  visibility: visible;
+  opacity: 1;
 }
