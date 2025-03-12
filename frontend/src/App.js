@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faArrowRight, faCalendar} from '@fortawesome/free-solid-svg-icons';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import {faArrowRight, faCalendar, faArrowRightFromBracket} from '@fortawesome/free-solid-svg-icons';
+import { faUser } from '@fortawesome/free-regular-svg-icons';
 import "./App.css";
 import logo from "./images/logo.png";
 import Pricing from "./Pricing";
@@ -15,7 +15,6 @@ import Profile from './profile';
 import axios from 'axios';
 
 function App() {
-  // const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
   const [user, setUser] = useState(null); // Store user data
@@ -50,13 +49,6 @@ function App() {
   };
 
   useEffect(() => {
-    // const updateCursorPosition = (e) => {
-    //   setCursorPosition({ x: e.clientX, y: e.clientY });
-    // };
-
-    // window.addEventListener("mousemove", updateCursorPosition);
-
-    // Check if the user is already authenticated (e.g., on page reload)
     const token = localStorage.getItem('token');
     if (token) {
       setIsAuthenticated(true);
@@ -64,7 +56,6 @@ function App() {
       if (userDataString) {
         try {
           const userData = JSON.parse(userDataString);
-          console.log('User data loaded from localStorage:', userData); {/* Add this line */}
           setUser(userData);
         } catch (error) {
           console.error('Error parsing user data:', error);
@@ -95,9 +86,6 @@ function App() {
       });
     }
 
-    // return () => {
-    //   window.removeEventListener("mousemove", updateCursorPosition);
-    // };
   }, [navigate]);
 
   // Handle successful login/signup
@@ -136,10 +124,14 @@ function App() {
           {isAuthenticated ? (
             <>
               <button className="profile-button" onClick={handleProfileClick}>
-                <FontAwesomeIcon icon={faUser} className="user-icon" /> {/* User logo */}
+                <FontAwesomeIcon icon={faUser} className="user-icon" /> 
+                <span></span>
               </button>
               <button className="logout-button" onClick={handleLogout}>
-                Logout
+                <div className="logout-button-content">
+                  <FontAwesomeIcon icon={faArrowRightFromBracket} className="logout-icon"/> {/* Use the imported icon here */}
+                  <span></span>
+                </div>
               </button>
             </>
           ) : (
@@ -210,12 +202,14 @@ function App() {
       <h3>Schedule an Interview</h3>
       <p>Choose a date and time that works for you, and the candidate.</p>
     </div>
-    <div className="point-number">1</div>
+    <div className="point-number">
+    <div className="point-number">01</div>
   </div>
+    </div>
 
   {/* Point 2 */}
   <div className="point point-2">
-    <div className="point-number">2</div>
+    <div className="point-number">02</div>
     <div className="point-content">
       <h3>Enter the Details</h3>
       <p>Enter the candidate's phone number, job description, and job role.</p>
@@ -228,12 +222,12 @@ function App() {
       <h3>Candidate Joins the Interview</h3>
       <p>Candidates directly receive an interview via phone call—no downloads required.</p>
     </div>
-    <div className="point-number">3</div>
+    <div className="point-number">03</div>
   </div>
 
   {/* Point 4 */}
   <div className="point point-4">
-    <div className="point-number">4</div>
+    <div className="point-number">04</div>
     <div className="point-content">
       <h3>AI Conducts the Interview</h3>
       <p>Our AI asks tailored questions, evaluates responses, and adapts the conversation in real-time.</p>
@@ -246,12 +240,12 @@ function App() {
       <h3>Data-Driven Insights</h3>
       <p>Receive a detailed report with scores, insights, and recommendations after the interview.</p>
     </div>
-    <div className="point-number">5</div>
+    <div className="point-number">05</div>
   </div>
 
   {/* Point 6 */}
   <div className="point point-6">
-    <div className="point-number">6</div>
+    <div className="point-number">06</div>
     <div className="point-content">
       <h3>Review and Hire</h3>
       <p>Compare candidates and make confident hiring decisions with all the data you need.</p>

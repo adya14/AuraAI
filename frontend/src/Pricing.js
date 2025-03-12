@@ -6,6 +6,7 @@ import axios from "axios";
 const Pricing = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [activeCard, setActiveCard] = useState(1); // Track the active card (1: middle, 0: left, 2: right)
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -65,7 +66,11 @@ const Pricing = () => {
     <div className="pricing">
       <h1>Pricing</h1>
       <div className="pricing-cards">
-        <div className="card">
+        {/* Left Card */}
+        <div
+          className={`card ${activeCard === 0 ? "active" : ""}`}
+          onClick={() => setActiveCard(0)}
+        >
           <h2>Basic Plan</h2>
           <p>₹999/month</p>
           <ul>
@@ -77,7 +82,12 @@ const Pricing = () => {
             Buy Now
           </button>
         </div>
-        <div className="card">
+
+        {/* Middle Card */}
+        <div
+          className={`card ${activeCard === 1 ? "active" : ""}`}
+          onClick={() => setActiveCard(1)}
+        >
           <h2>Pro Plan</h2>
           <p>₹4999/month</p>
           <ul>
@@ -89,7 +99,12 @@ const Pricing = () => {
             Buy Now
           </button>
         </div>
-        <div className="card">
+
+        {/* Right Card */}
+        <div
+          className={`card ${activeCard === 2 ? "active" : ""}`}
+          onClick={() => setActiveCard(2)}
+        >
           <h2>Quantum Flex Plan</h2>
           <p>Pay as you go</p>
           <ul>

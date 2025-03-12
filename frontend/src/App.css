@@ -253,9 +253,10 @@ body {
 
 /* Huge number styling */
 .point-number {
-  font-size: 10rem; /* Huge number */
-  font-weight: bold;
-  color: #dbdbdb; /* Light gray color for subtlety */
+  font-family: "Rammetto One", sans-serif;
+  font-size: 9rem; /* Huge number */
+  /* font-weight: bold; */
+  color: #dfdfdf; /* Light gray color for subtlety */
   z-index: -1; /* Push it behind the content */
   user-select: none; /* Prevent text selection */
 }
@@ -573,16 +574,24 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack icon and text vertically */
+  align-items: center; /* Center items horizontally */
+  gap: 4px; /* Space between icon and text */
   margin-right: 10px;
 }
 
 .user-icon {
-  width: 24px; /* Adjust size as needed */
-  height: 24px;
-  color: #000; /* Adjust color as needed */
+  width: 18px; /* Adjust size as needed */
+  height: 18px;
+  color: #333; /* Adjust color as needed */
+}
+
+/* Profile text styling */
+.profile-button span {
+  font-size: 12px; /* Adjust text size */
+  color: #333; /* Adjust text color */
 }
 
 /* Hover effect */
@@ -593,16 +602,34 @@ body {
 /* Logout button */
 .logout-button {
   background: none;
-  border: 1px solid #ccc;
+  border: none; /* Remove border */
   color: #333;
-  padding: 8px 16px;
+  padding: 8px;
   margin-right: 30px;
   cursor: pointer;
   border-radius: 4px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logout-button:hover {
-  background: #f0f0f0;
+.logout-button:hover .logout-icon {
+  color: #007bff; 
+}
+
+.logout-button-content {
+  display: flex;
+  flex-direction: column; /* Stack icon and text vertically */
+  align-items: center;
+  gap: 4px; /* Space between icon and text */
+}
+
+.logout-button-content svg {
+  font-size: 15px; /* Adjust icon size */
+}
+
+.logout-button-content span {
+  font-size: 12px; /* Adjust text size */
 }
 
