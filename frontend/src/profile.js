@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Profile.css';
-import avatar from './images/profile_avatar.jpg'; 
+import avatar from './images/profile_avatar.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
-const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the popup
+const Profile = ({ onClose }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [showEditPopup, setShowEditPopup] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [password, setPassword] = useState('');
+  const [isEditing, setIsEditing] = useState(false); // State to toggle editing mode
+  const [name, setName] = useState(''); // Combined name field
+  const [email, setEmail] = useState(''); // Add email state
+  const [currentPassword, setCurrentPassword] = useState(''); // Current password field
+  const [newPassword, setNewPassword] = useState(''); // New password field
+  const [verificationCode, setVerificationCode] = useState(''); // Verification code field
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false); // Show/hide verification code popup
+  const [error, setError] = useState(''); // Error message state
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -34,8 +38,8 @@ const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the p
         });
 
         setUser(response.data.user);
-        setFirstName(response.data.user.firstName);
-        setLastName(response.data.user.lastName);
+        setName(`${response.data.user.firstName} ${response.data.user.lastName}`); // Set combined name
+        setEmail(response.data.user.email); // Set email from response
       } catch (error) {
         console.error('Error fetching profile:', error);
         handleLogout();
@@ -47,30 +51,51 @@ const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the p
     fetchProfile();
   }, []);
 
-  // Handle Profile Update
   const handleUpdateProfile = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
 
+      // Send verification code first
+      await sendVerificationCode();
+
+      // Show the verification popup
+      setShowVerificationPopup(true);
+    } catch (error) {
+      console.error('Error updating profile:', error.response?.data || error.message);
+      setError('Failed to send verification code. Please check your current password.');
+    }
+  };
+
+  const handleVerifyAndUpdate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Split the name into firstName and lastName
+      const [firstName, lastName] = name.split(' ');
+
       const updatedData = {
         firstName,
         lastName,
-        ...(password && { password }), // Only send password if it's entered
+        currentPassword, // Include current password
+        ...(newPassword && { newPassword, verificationCode }), // Include new password and verification code if newPassword is entered
       };
 
-      await axios.put('http://localhost:5000/api/profile', updatedData, {
+      const response = await axios.put('http://localhost:5000/api/profile', updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setUser((prev) => ({ ...prev, firstName, lastName })); // Update UI instantly
-      setShowEditPopup(false); // Close popup
+      setIsEditing(false); // Exit editing mode
+      setShowVerificationPopup(false); // Hide verification code popup
+      setError(''); // Clear errors
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile:', error.response?.data || error.message);
+      setError('Failed to update profile. Please check your verification code.');
     }
   };
 
-  // Handle Account Deletion
   const handleDeleteAccount = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -85,6 +110,27 @@ const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the p
       window.location.href = '/'; // Redirect after deletion
     } catch (error) {
       console.error('Error deleting account:', error);
+    }
+  };
+
+  const sendVerificationCode = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.post(
+        'http://localhost:5000/api/send-verification-code',
+        { currentPassword }, // Include current password
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log('Verification code sent:', response.data); // Debugging
+      setError('A verification code has been sent to your email.'); // Notify user
+    } catch (error) {
+      console.error('Error sending verification code:', error.response?.data || error.message);
+      setError('Failed to send verification code. Please check your current password.');
     }
   };
 
@@ -103,79 +149,92 @@ const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the p
 
         {/* Profile Image (Circle) */}
         <div className="profile-image">
-          <img src={avatar} alt="Profile Character" />
+          {/* <img src={avatar} alt="Profile Character" /> */}
         </div>
 
         {/* Profile Content */}
         <div className="profile-content">
           <div className="profile-info">
+            {/* Name Field */}
             <div className="profile-field">
               <label>Name:</label>
-              <span>
-                {user.firstName} {user.lastName}
-              </span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Full Name"
+                />
+              ) : (
+                <span>{name}</span>
+              )}
             </div>
+
+            {/* Email Field (Non-Editable) */}
             <div className="profile-field">
               <label>Email:</label>
-              <span>{user.email}</span>
+              <span>{user.email}</span> {/* Always display email as non-editable text */}
             </div>
-            <div className="profile-field">
-              <label>Password:</label>
-              <span>*********</span> {/* Hidden password */}
-            </div>
-            <div className="profile-field">
-              <label>Plan:</label>
-              <span>{user.plan || 'No plan selected'}</span>
-            </div>
+
+            {/* Password Field (Conditional for JWT Login) */}
+            {!user.googleId && isEditing && ( // Only show password fields for JWT login in editing mode
+              <>
+                <div className="profile-field">
+                  <label>Current Password:</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div className="profile-field">
+                  <label>New Password:</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+              </>
+            )}
+            {!user.googleId && !isEditing && ( // Show password placeholder for JWT login in non-editing mode
+              <div className="profile-field">
+                <label>Password:</label>
+                <span>*********</span>
+              </div>
+            )}
+          </div>
+          {/* Plan Field (Non-Editable) */}
+          <div className="profile-field">
+            <label>Plan:</label>
+            <span>{user.plan || 'No plan selected'}</span>
           </div>
 
           {/* Buttons Section */}
           <div className="profile-buttons">
-            <button className="edit-button" onClick={() => setShowEditPopup(true)}>
-              Edit Profile
-            </button>
-            <button className="delete-button" onClick={() => setShowDeletePopup(true)}>
-              Delete Account
-            </button>
+            {isEditing ? (
+              <>
+                <button className="cancel-button" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </button>
+                <button className="confirm-edit-button" onClick={handleUpdateProfile}>
+                  Save Changes
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="edit-button" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </button>
+                <button className="delete-button" onClick={() => setShowDeletePopup(true)}>
+                  Delete Account
+                </button>
+              </>
+            )}
           </div>
         </div>
-
-        {/* Edit Profile Popup */}
-        {showEditPopup && (
-          <div className="edit-popup">
-            <h3>Edit Profile</h3>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="First Name"
-            />
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Last Name"
-            />
-
-            {/* Hide password field for OAuth users */}
-            {!user.googleId && (
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="New Password (leave blank to keep current)"
-              />
-            )}
-            <div className="popup-buttons">
-              <button className="cancel-button" onClick={() => setShowEditPopup(false)}>
-                Cancel
-              </button>
-              <button className="confirm-edit-button" onClick={handleUpdateProfile}>
-                Save Changes
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && (
@@ -190,6 +249,30 @@ const Profile = ({ onClose }) => { // Add `onClose` prop to handle closing the p
               </button>
               <button className="confirm-delete-button" onClick={handleDeleteAccount}>
                 Proceed with Deletion
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Verification Code Popup */}
+        {showVerificationPopup && (
+          <div className="delete-popup">
+            <p>A verification code has been sent to your email. Please enter it below:</p>
+            <div className="profile-field">
+              <label>Verification Code:</label>
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder="Enter verification code"
+              />
+            </div>
+            <div className="popup-buttons">
+              <button className="cancel-button" onClick={() => setShowVerificationPopup(false)}>
+                Cancel
+              </button>
+              <button className="confirm-edit-button" onClick={handleVerifyAndUpdate}>
+                Verify and Save
               </button>
             </div>
           </div>

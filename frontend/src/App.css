@@ -221,7 +221,7 @@ body {
   justify-content: space-between;
   max-width: 1000px;
   margin: 0 auto 60px; /* Add spacing between points */
-  padding: 20px;
+  padding: 2px;
   position: relative; /* For the horizontal line */
 }
 

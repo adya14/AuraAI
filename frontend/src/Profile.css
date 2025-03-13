@@ -20,13 +20,12 @@ body {
 
 .profile-container {
   background-color: #f7f7f7;
-  /* backdrop-filter: blur(20px); */
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   width: 500px;
   overflow: hidden;
   position: relative;
-  padding: 5px
+  padding: 5px;
 }
 
 .close-button {
@@ -46,14 +45,14 @@ body {
 
 .profile-header-section {
   height: 130px;
-  background-color: #addaff;
-  /* background: linear-gradient(135deg, #d5adff, #86b2ff); */
+  background-image: url('./images/sky2.jpg');
+  background-color: #272728;
   border-radius: 10px;
 }
 
 .profile-image {
   position: absolute;
-  top: 90px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   width: 110px;
@@ -72,7 +71,7 @@ body {
 
 .profile-content {
   padding: 80px 20px 20px;
-  text-align: center;
+  text-align: left;
 }
 
 .profile-info {
@@ -91,7 +90,7 @@ body {
   color: #333;
   width: 150px;
   margin-right: 10px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
   text-align: left;
 }
 
@@ -99,7 +98,7 @@ body {
   color: #666;
   width: 200px;
   margin-right: 30px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .profile-buttons {
@@ -109,29 +108,29 @@ body {
 }
 
 .edit-button, .delete-button {
-  padding: 10px 20px;
-  border: none; /* Remove default border */
-  border-radius: 15px; /* Rounded corners */
+  padding: 10px 30px;
+  border: none;
+  border-radius: 15px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: #e0e0e0; /* Base background color */
-  box-shadow: 5px 5px 10px #d6d6d6, -5px -5px 10px #ffffff; /* Neomorphism shadow */
-  color: #3f3f3f; /* Text color */
+  background: #e0e0e0;
+  box-shadow: 5px 5px 10px #d6d6d6, -5px -5px 10px #ffffff;
+  color: #3f3f3f;
+  margin-top: 10px;
 }
 
 .edit-button:hover, .delete-button:hover {
-  background: #d9d9d9; /* Keep the same background on hover */
-  /* box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff; */
-  color: #3f3f3f; /* Keep the same text color on hover */
+  background: #d9d9d9;
+  color: #3f3f3f;
 }
 
 .edit-button:active, .delete-button:active {
-  box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff; /* Inset shadow for active/pressed state */
-  transform: scale(0.98); /* Slightly shrink the button when clicked */
+  box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+  transform: scale(0.98);
 }
 
-.edit-popup, .delete-popup {
+.delete-popup {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -145,18 +144,9 @@ body {
   text-align: center;
 }
 
-.edit-popup h3, .delete-popup p {
+.delete-popup p {
   margin-bottom: 20px;
   color: #333;
-}
-
-.edit-popup input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
 }
 
 .popup-buttons {
@@ -165,40 +155,69 @@ body {
   gap: 10px;
 }
 
-.cancel-button, .confirm-edit-button, .confirm-delete-button {
+.cancel-button {
   padding: 10px 20px;
   border: none;
-  border-radius: 5px;
+  border-radius: 15px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  background: #e0e0e0;
+  box-shadow: 5px 5px 10px #cccccc, -5px -5px 10px #ffffff;
+  color: #3f3f3f;
 }
 
-.cancel-button {
-  background-color: #ddd;
-  color: #333;
+.confirm-edit-button{
+  padding: 10px 20px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #e0e0e0;
+  box-shadow: 5px 5px 10px #cccccc, -5px -5px 10px #ffffff;
+  color: #3f3f3f;
 }
 
 .cancel-button:hover {
   background-color: #ccc;
 }
 
-.confirm-edit-button {
-  background-color: #2575fc;
-  color: #fff;
-}
-
-.confirm-edit-button:hover {
-  background-color: #1a5bbf;
-}
-
 .confirm-delete-button {
-  background-color: #ff4d4d;
-  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #f86363;
+  box-shadow: 5px 5px 10px #cccccc, -5px -5px 10px #ffffff;
+  color: #3f3f3f;
 }
 
 .confirm-delete-button:hover {
-  background-color: #cc0000;
+  background-color: #f84f4f;
+}
+
+.profile-field input {
+  width: 50%; /* Make input fields stretch */
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: all 0.3s ease-in-out;
+}
+
+.profile-field input:focus {
+  outline: none;
+  border-color: #86b2ff;
+  box-shadow: 0 0 5px rgba(134, 178, 255, 0.5);
+}
+
+.error-message {
+  color: #ff4d4d;
+  margin-bottom: 10px;
 }
 
 @keyframes spin {

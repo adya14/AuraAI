@@ -14,10 +14,10 @@ const router = express.Router();
 router.post('/signup', async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   try {
-    const existingUser = await User.findOne({email});
+    const existingUser = await User.findOne({ email });
 
-    if (existingUser){
-      return res.status(400).json({error: "Account already exists with this email. Please log in using your Google account"});
+    if (existingUser) {
+      return res.status(400).json({ error: "Account already exists with this email. Please log in using your Google account" });
     }
     const user = new User({ firstName, lastName, email, password });
     await user.save();
@@ -37,8 +37,8 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) throw new Error('User not found');
 
-    if(!user.password){
-      return res.status(400).json({error: "The account was created using Google. Please log in using Google."});
+    if (!user.password) {
+      return res.status(400).json({ error: "The account was created using Google. Please log in using Google." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -72,42 +72,108 @@ router.get('/auth/google/callback', (req, res, next) => {
   })(req, res, next);
 });
 
-
 // Profile Route (Protected by JWT)
 router.get('/api/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
-    // console.log('Authenticated using:', req.user._id); 
-
     // Fetch the user's profile information from the database
     const user = await User.findById(req.user._id).select('-password'); // Exclude the password field
     if (!user) {
-      // console.log('User not found'); 
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // console.log('User data:', user); 
     res.json({ user });
   } catch (error) {
-    console.error('Error fetching profile:', error); 
+    console.error('Error fetching profile:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update user profile
+router.post('/api/send-verification-code', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  const { currentPassword } = req.body;
+
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify the current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect.' });
+    }
+
+    // Generate a random 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save the verification code in the user's document
+    user.verificationCode = verificationCode;
+    await user.save();
+
+    // Send the verification code via email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: 'Verification Code',
+      text: `Your verification code is: ${verificationCode}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Verification code sent successfully.' });
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({ error: 'Failed to send verification code.' });
+  }
+});
+
+// Update Profile (with verification code check)
 router.put('/api/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
-    const { firstName, lastName, password } = req.body;
-    let updates = { firstName, lastName };
+    const { firstName, lastName, currentPassword, newPassword, verificationCode } = req.body;
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
+    // Fetch the user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify the current password
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Current password is incorrect.' });
+      }
+    }
+
+    // Verify the verification code
+    if (verificationCode && verificationCode !== user.verificationCode) {
+      return res.status(400).json({ error: 'Invalid verification code.' });
+    }
+
+    // Update the user's profile
+    const updates = { firstName, lastName };
+    if (newPassword) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
       updates.password = hashedPassword;
     }
 
-    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
-    res.json({ message: 'Profile updated successfully', user });
+    // Clear the verification code after successful update
+    updates.verificationCode = null;
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+    res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile.' });
   }
 });
 
@@ -126,6 +192,7 @@ router.delete('/api/profile', passport.authenticate('jwt', { session: false }), 
   }
 });
 
+// Forgot Password Route
 router.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
