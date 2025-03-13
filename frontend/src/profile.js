@@ -149,7 +149,7 @@ const Profile = ({ onClose }) => {
 
         {/* Profile Image (Circle) */}
         <div className="profile-image">
-          {/* <img src={avatar} alt="Profile Character" /> */}
+          <img src={avatar} alt="Profile Character" />
         </div>
 
         {/* Profile Content */}

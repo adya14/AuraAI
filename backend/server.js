@@ -3,6 +3,7 @@ const connectDB = require('./db');
 const passport = require('./config/passportConfig'); // Import Passport config
 const authRoutes = require('./routes/authRoutes');
 const cors = require('cors');
+const nodemailer = require('nodemailer'); // Import Nodemailer
 
 require('dotenv').config();
 
@@ -31,6 +32,37 @@ app.use('/', authRoutes);
 // Add a route for the root URL
 app.get('/', (req, res) => {
   res.send('Backend server is running!');
+});
+
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Use Gmail as the email service
+  auth: {
+    user: process.env.EMAIL_USER, // Your Gmail email (from environment variables)
+    pass: process.env.EMAIL_PASSWORD, // Your Gmail password or app password (from environment variables)
+  },
+});
+
+// Route to handle contact form submissions
+app.post('/send-email', (req, res) => {
+  const { name, email, message } = req.body;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER, // Sender email
+    to: 'adyatwr@gmail.com', // Your email (recipient)
+    subject: 'New Message from Contact Form', // Email subject
+    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`, // Email body
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ success: false, message: 'Failed to send email.' });
+    } else {
+      console.log('Email sent:', info.response);
+      res.status(200).json({ success: true, message: 'Email sent successfully!' });
+    }
+  });
 });
 
 // Handle preflight requests for all routes

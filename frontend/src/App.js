@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight, faCalendar, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faCalendar, faArrowRightFromBracket, faArrowUp } from '@fortawesome/free-solid-svg-icons'; // Add faArrowUp for the back-to-top icon
 import { faUser } from '@fortawesome/free-regular-svg-icons';
 import "./App.css";
 import logo from "./images/logo.png";
 import Pricing from "./Pricing";
-import Contact from "./Contact"; // Import the Contact component
+import Contact from "./Contact";
+import Scheduler from "./Scheduler"
 import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
@@ -21,7 +22,9 @@ function App() {
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false); // State to control the visibility of the back-to-top button
 
+  // Function to toggle FAQ
   const toggleFAQ = (index) => {
     if (activeIndex === index) {
       setActiveIndex(null);
@@ -30,10 +33,12 @@ function App() {
     }
   };
 
+  // Function to handle profile click
   const handleProfileClick = () => {
     setIsProfileModalOpen(true);
   };
 
+  // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -42,6 +47,32 @@ function App() {
     navigate('/');
   };
 
+  // Function to handle scroll event
+  const handleScroll = () => {
+    if (window.scrollY > 300) { // Show the button after scrolling 300px
+      setShowBackToTop(true);
+    } else {
+      setShowBackToTop(false);
+    }
+  };
+
+  // Function to scroll back to the top
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth", // Smooth scroll
+    });
+  };
+
+  // Add scroll event listener on component mount
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll); // Cleanup the event listener
+    };
+  }, []);
+
+  // Rest of your existing code (authentication logic, etc.)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -95,6 +126,7 @@ function App() {
 
   return (
     <div className="container-fluid">
+      {/* Navbar */}
       <nav className="custom-navbar">
         <div className="navbar-left">
           <Link to="/">
@@ -103,7 +135,7 @@ function App() {
         </div>
         <div className="navbar-center">
           <div className="nav-links-container">
-            <Link to="/" className="nav-link">HOME</Link>
+            <Link to="/" className="nav-link">Home</Link>
             <Link
               to="/"
               className="nav-link"
@@ -112,7 +144,7 @@ function App() {
                 document.getElementById("pricing").scrollIntoView({ behavior: "smooth" });
               }}
             >
-              PRICING
+              Pricing
             </Link>
             <Link
               to="/"
@@ -122,8 +154,9 @@ function App() {
                 document.getElementById("contact").scrollIntoView({ behavior: "smooth" });
               }}
             >
-              CONTACT
+              Contact Us
             </Link>
+            <Link to="/Scheduler" className="nav-link">Scheduler</Link>
           </div>
         </div>
         <div className="navbar-right">
@@ -151,15 +184,18 @@ function App() {
         </div>
       </nav>
 
+      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onRequestClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
       />
 
+      {/* Routes */}
       <Routes>
         <Route path="/" element={
           <>
+            {/* Hero Section */}
             <header className="hero">
               <h1>The Future of AI-Powered Interviews</h1>
               <p>Experience seamless AI-driven phone interviews to automate your recruiting process.</p>
@@ -175,7 +211,13 @@ function App() {
                     <FontAwesomeIcon icon={faArrowRight} />
                   </span>
                 </button>
-                <button className="hero-button book-call-button" onClick={() => navigate('/contact')}>
+                <button
+                  className="hero-button book-call-button"
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent default navigation
+                    document.getElementById("contact").scrollIntoView({ behavior: "smooth" }); // Smooth scroll to the contact section
+                  }}
+                >
                   Book a Call
                   <span className="icon-calendar">
                     <FontAwesomeIcon icon={faCalendar} />
@@ -184,6 +226,7 @@ function App() {
               </div>
             </header>
 
+            {/* Features Section */}
             <section className="features">
               <h2>Why Choose Aura AI?</h2>
               <div className="feature-cards">
@@ -204,6 +247,7 @@ function App() {
 
             <Pricing></Pricing>
 
+            {/* How It Works Section */}
             <section className="how-it-works">
               <h2>How It Works?</h2>
               <div className="point point-1">
@@ -262,6 +306,7 @@ function App() {
               </div>
             </section>
 
+            {/* FAQ Section */}
             <section className="faq">
               <h2>Frequently Asked Questions</h2>
               <div className="faq-container">
@@ -312,13 +357,23 @@ function App() {
               </div>
             </section>
 
-            {/* Add the Contact section below the FAQ section */}
+            {/* Contact Section */}
             <Contact />
           </>
         } />
-        <Route path="/contact" element={<Navigate to="/" replace />} /> {/* Redirect /contact to home */}
+        <Route path="/contact" element={<Navigate to="/" replace />} />
+        <Route path="/Scheduler" element={<Scheduler />} />
+
       </Routes>
 
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop}>
+          <FontAwesomeIcon icon={faArrowUp} />
+        </button>
+      )}
+
+      {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
