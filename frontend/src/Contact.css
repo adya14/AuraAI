@@ -4,7 +4,7 @@ body {
   padding: 0;
 }
 .contact {
-    padding: 100px 5%;
+    padding: 30px 5%;
     text-align: center;
     background-color: #fafafa;
   }
@@ -35,15 +35,16 @@ body {
   }
   
   .contact-form button {
-    background-color: #007bff;
+    background-color: #474747;
     color: white;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     transition: background 0.3s;
+    font-size: 15px;
   }
   
   .contact-form button:hover {
-    background-color: #0056b3;
+    background-color: #1a1a1a;
   }

@@ -2,9 +2,8 @@ import React, { useEffect } from "react";
 import "./Contact.css";
 
 const Contact = () => {
-
   return (
-    <section id="contact" className="contact">
+    <section id="contact" className="contact"> {/* Add id="contact" here */}
       <div className="contact">
         <h1>Contact Us</h1>
         <form className="contact-form">
