@@ -4,17 +4,34 @@
   max-width: 800px;
   margin: 0 auto;
   text-align: center;
+  position: relative; /* Required for pseudo-element positioning */
+}
+
+/* Circular Gradient Background */
+.scheduler::before {
+  content: "";
+  position: absolute;
+  top: 60%;
+  left: 40%;
+  transform: translate(-50%, -50%); /* Center the gradient */
+  width: 100%; /* Make the gradient larger than the form */
+  background-image: url('./images/contact_bg2.png');
+  background-size: 1000px;
+  background-repeat: no-repeat;
+  height: 100%;
+  z-index: -1; /* Place the gradient behind the form */
+  border-radius: 20px; /* Match the form container's rounded corners */
 }
 
 .scheduler h1 {
-  font-family: "Merriweather", serif; 
+  font-family: "Merriweather", serif;
   font-size: 2.5rem;
   color: #333;
   margin-bottom: 20px;
 }
 
-.scheduler h2{
-  font-family: "Merriweather", serif; 
+.scheduler h2 {
+  font-family: "Merriweather", serif;
 }
 
 .scheduler .tagline {
@@ -23,11 +40,16 @@
   margin-bottom: 40px;
 }
 
+/* Glass Morphism Container */
 .form-container {
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.767); /* Semi-transparent white background */
+  backdrop-filter: blur(30px); /* Blur effect */
+  border-radius: 20px; /* Rounded corners */
+  border: 5px solid rgba(255, 255, 255, 0.3); /* Light border */
+  padding: 80px; /* Add some padding */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  position: relative; /* Ensure the form is above the gradient */
+  z-index: 1; /* Place the form above the gradient */
 }
 
 .form-group {
@@ -44,11 +66,19 @@
 
 .form-group input,
 .form-group textarea {
+  background-color: rgba(255, 255, 255, 0.863); /* Slightly transparent background */
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 1px solid rgb(174, 174, 174); /* Light border */
+  border-radius: 20px; /* Rounded corners */
   font-size: 1rem;
+  transition: border-color 0.3s ease; /* Smooth transition for border */
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #007bff; /* Highlight border on focus */
+  outline: none; 
 }
 
 .form-group textarea {
@@ -57,16 +87,56 @@
 }
 
 .scheduler-button {
-  background-color: #007bff;
+  background-color: #2b2b2b;
   color: white;
   border: none;
   padding: 10px 20px;
   font-size: 1.2rem;
   border-radius: 25px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .scheduler-button:hover {
-  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+/* Candidate Group Styles */
+.candidate-group {
+  display: flex;
+  gap: 50px; /* Space between name and phone fields */
+  margin-bottom: 20px;
+}
+
+.candidate-group .form-group {
+  flex: 1; /* Make fields take equal space */
+}
+
+/* Phone Group Styles */
+.phone-group {
+  position: relative; /* Required for positioning the plus icon */
+}
+
+/* Plus Icon Styles */
+.add-more-icon,
+.remove-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: -65px; /* Move the icon further to the right */
+  top: 65%; /* Adjust vertical alignment to match the input fields */
+  transform: translateY(-50%);
+  color: #0d0d0e; /* Blue color for the icon */
+  font-size: 1.0rem; /* Adjust icon size */
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px; /* Set width and height for the circular border */
+  height: 25px;
+  border-radius: 50%; /* Make the border circular */
+  border: 2px solid #222222; /* Add a border around the icon */
+  background-color: rgba(255, 255, 255, 0.8); /* Light background for the circle */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
 }

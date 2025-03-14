@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faCalendar, faArrowRightFromBracket, faArrowUp } from '@fortawesome/free-solid-svg-icons'; // Add faArrowUp for the back-to-top icon
 import { faUser } from '@fortawesome/free-regular-svg-icons';
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 import logo from "./images/logo.png";
 import Pricing from "./Pricing";
@@ -20,10 +21,26 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeIndex, setActiveIndex] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false); // State to control the visibility of the back-to-top button
 
+    // Handle scroll to a specific section
+    const scrollToSection = (sectionId) => {
+      if (location.pathname !== "/") {
+        navigate("/"); // Redirect to the home page if not already there
+      }
+  
+      // Use a timeout to ensure the home page has loaded before scrolling
+      setTimeout(() => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100); // Adjust the timeout if needed
+    };
+  
   // Function to toggle FAQ
   const toggleFAQ = (index) => {
     if (activeIndex === index) {
@@ -141,7 +158,8 @@ function App() {
               className="nav-link"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById("pricing").scrollIntoView({ behavior: "smooth" });
+                scrollToSection("pricing");
+                // document.getElementById("pricing").scrollIntoView({ behavior: "smooth" });
               }}
             >
               Pricing
@@ -151,7 +169,8 @@ function App() {
               className="nav-link"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById("contact").scrollIntoView({ behavior: "smooth" });
+                scrollToSection("contact");
+                // document.getElementById("contact").scrollIntoView({ behavior: "smooth" });
               }}
             >
               Contact Us

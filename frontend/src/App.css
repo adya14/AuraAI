@@ -70,7 +70,7 @@ body {
   text-align: center;
   padding: 110px 5% 10px; /* Adjusted padding to account for fixed navbar */
   background-image: url('./images/background.gif');
-  background-size: 890px;
+  background-size: 1000px;
   background-position: center center;
   background-repeat: no-repeat;
   color: rgb(21, 20, 20);
@@ -439,7 +439,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(252, 252, 252, 0.395); /* Semi-transparent background */
+  background: rgba(252, 252, 252, 0.619); /* Semi-transparent background */
   backdrop-filter: blur(30px); /* Blur effect for glass morphism */
   border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
   border-radius: 35px; /* Rounded corners */
@@ -493,24 +493,24 @@ body {
 }
 
 .modal button[type="submit"] {
-  background-color: #007bff;
+  background-color: #282828;
   color: white;
   padding: 10px;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: transform 0.3s;
 }
 
 .modal button[type="submit"]:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  transform: scale(1.1); 
 }
 
 .modal button[type="button"] {
   background: none;
   border: none;
-  color: #007bff;
+  color: #282828;
   cursor: pointer;
   font-size: 14px;
   text-align: center;
@@ -530,16 +530,16 @@ body {
 .google-button {
   display: inline-flex;
   align-items: center;
-  background-color: #007bff; /* Google Blue */
+  background-color: #282828; /* Google Blue */
   color: white;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 20px;
   text-decoration: none;
-  transition: background-color 0.3s;
+  transition: transform 0.3s;
 }
 
 .google-button:hover {
-  background-color: #357abd; /* Darker Google Blue */
+  transform: scale(1.1); 
 }
 
 .google-button img {
