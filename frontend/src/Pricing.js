@@ -63,7 +63,7 @@ const Pricing = () => {
         key: "rzp_test_hQcNyHrxX8CxIR", // Replace with your Razorpay Key ID
         amount: amount * 100, // Amount in paisa (₹1 = 100 paise)
         currency: "INR",
-        name: "Aura AI",
+        name: "moon AI",
         description: `Payment for ${planName}`,
         order_id: orderId,
         handler: async function (response) {

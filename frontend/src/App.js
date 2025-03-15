@@ -247,7 +247,7 @@ function App() {
 
             {/* Features Section */}
             <section className="features">
-              <h2>Why Choose Aura AI?</h2>
+              <h2>Why Choose moon AI?</h2>
               <div className="feature-cards">
                 <div className="card">
                   <h3>Efficient Screening</h3>
@@ -331,34 +331,34 @@ function App() {
               <div className="faq-container">
                 <div className={`faq-item ${activeIndex === 0 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(0)}>
-                    What is Aura AI?
+                    What is moon AI?
                     <span className="faq-icon">+</span>
                   </button>
                   <div className="faq-answer">
                     <p>
-                      Aura AI is an AI-powered platform that automates the recruitment process by conducting AI-driven phone interviews.
+                      moon AI is an AI-powered platform that automates the recruitment process by conducting AI-driven phone interviews.
                     </p>
                   </div>
                 </div>
                 <div className={`faq-item ${activeIndex === 1 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(1)}>
-                    How does Aura AI work?
+                    How does moon AI work?
                     <span className="faq-icon">+</span>
                   </button>
                   <div className="faq-answer">
                     <p>
-                      Aura AI uses advanced natural language processing (NLP) to conduct interviews, evaluate responses, and provide detailed analytics.
+                      moon AI uses advanced natural language processing (NLP) to conduct interviews, evaluate responses, and provide detailed analytics.
                     </p>
                   </div>
                 </div>
                 <div className={`faq-item ${activeIndex === 2 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(2)}>
-                    Is Aura AI free to use?
+                    Is moon AI free to use?
                     <span className="faq-icon">+</span>
                   </button>
                   <div className="faq-answer">
                     <p>
-                      Aura AI offers a free trial for new users. After the trial, you can choose from our affordable pricing plans.
+                      moon AI offers a free trial for new users. After the trial, you can choose from our affordable pricing plans.
                     </p>
                   </div>
                 </div>
@@ -398,7 +398,7 @@ function App() {
           <div className="footer-section">
             <h3>About Us</h3>
             <p>
-              Aura AI is revolutionizing the hiring process with AI-powered phone interviews.
+              moon AI is revolutionizing the hiring process with AI-powered phone interviews.
               Our mission is to make recruitment seamless, efficient, and data-driven.
             </p>
           </div>
@@ -422,20 +422,20 @@ function App() {
           <div className="footer-section">
             <h3>Follow Us</h3>
             <div className="social-links">
-              <a href="https://facebook.com/auraai" target="_blank" rel="noopener noreferrer">
+              <a href="https://facebook.com/moonai" target="_blank" rel="noopener noreferrer">
                 <img src={facebookIcon} alt="Facebook" />
               </a>
-              <a href="https://linkedin.com/company/auraai" target="_blank" rel="noopener noreferrer">
+              <a href="https://linkedin.com/company/moonai" target="_blank" rel="noopener noreferrer">
                 <img src={linkedinIcon} alt="LinkedIn" />
               </a>
-              <a href="https://instagram.com/auraai" target="_blank" rel="noopener noreferrer">
+              <a href="https://instagram.com/moonai" target="_blank" rel="noopener noreferrer">
                 <img src={instagramIcon} alt="Instagram" />
               </a>
             </div>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 Aura AI. All rights reserved.</p>
+          <p>&copy; 2024 moon AI. All rights reserved.</p>
         </div>
       </footer>
     </div>

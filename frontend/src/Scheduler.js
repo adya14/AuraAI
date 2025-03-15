@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios"; // Import axios for making HTTP requests
 import "./Scheduler.css"; // Import the CSS file
 
 const Scheduler = () => {
@@ -6,6 +7,8 @@ const Scheduler = () => {
   const [jobRole, setJobRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [interviewDateTime, setInterviewDateTime] = useState("");
+  const [loading, setLoading] = useState(false); // Track loading state
+  const [error, setError] = useState(""); // Track error messages
 
   // Handle adding more candidate fields
   const addCandidateField = () => {
@@ -36,15 +39,40 @@ const Scheduler = () => {
   };
 
   // Handle form submission
-  const handleScheduler = () => {
-    console.log("Call scheduled with the following details:");
-    candidates.forEach((candidate, index) => {
-      console.log(`Candidate ${index + 1}:`, candidate.name, candidate.phone);
-    });
-    console.log("Job Role:", jobRole);
-    console.log("Job Description:", jobDescription);
-    console.log("Interview Date & Time:", interviewDateTime);
-    alert("Call scheduled successfully!");
+  const handleScheduler = async () => {
+    setLoading(true); // Set loading state
+    setError(""); // Clear previous errors
+
+    try {
+      // Validate input
+      if (!candidates[0].name || !candidates[0].phone || !jobRole || !jobDescription) {
+        throw new Error("Please fill in all fields.");
+      }
+
+      // Prepare data to send to the backend
+      const data = {
+        jobRole,
+        jobDescription,
+        recipientPhoneNumber: candidates[0].phone, // Use the first candidate's phone number
+      };
+
+      // Make a POST request to the /make-call API
+      const response = await axios.post("http://localhost:5000/make-call", data);
+
+      console.log("Call scheduled with the following details:");
+      console.log(`Candidate: ${candidates[0].name}, Phone: ${candidates[0].phone}`);
+      console.log("Job Role:", jobRole);
+      console.log("Job Description:", jobDescription);
+      console.log("API Response:", response.data);
+
+      alert("Call scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling call:", error);
+      setError(error.response?.data?.error || error.message || "Failed to schedule call.");
+      alert("Failed to schedule call. Please try again.");
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
 
   return (
@@ -139,9 +167,12 @@ const Scheduler = () => {
         </div>
 
         {/* Schedule Button */}
-        <button className="scheduler-button" onClick={handleScheduler}>
-          Schedule
+        <button className="scheduler-button" onClick={handleScheduler} disabled={loading}>
+          {loading ? "Scheduling..." : "Schedule"}
         </button>
+
+        {/* Display Errors Here */}
+        {error && <p className="error-message">{error}</p>}
       </div>
     </div>
   );
