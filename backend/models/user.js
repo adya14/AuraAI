@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: function() { return !this.googleId; } },
   googleId: { type: String, unique: true, sparse: true }, // For Google OAuth users
   plan: { type: String, default: 'No Plan selected' }, // Example: Free, Premium, etc.
+  resetToken: { type: String }, // field for reset tokens (forgot password)
 });
 
 // Hash the password before saving the user

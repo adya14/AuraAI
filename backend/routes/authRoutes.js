@@ -53,8 +53,10 @@ router.post('/login', async (req, res) => {
 });
 
 // Google Auth Routes
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
+router.get('/auth/google', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+  prompt: 'select_account', 
+}));
 router.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', { session: false }, (err, user, info) => {
     if (err) {
@@ -114,13 +116,13 @@ router.post('/api/send-verification-code', passport.authenticate('jwt', { sessio
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL,
+        user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
       },
     });
 
     const mailOptions = {
-      from: process.env.EMAIL,
+      from: process.env.EMAIL_USER,
       to: user.email,
       subject: 'Verification Code',
       text: `Your verification code is: ${verificationCode}`,
@@ -202,11 +204,11 @@ router.post('/api/forgot-password', async (req, res) => {
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASSWORD }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD }
   });
 
   const mailOptions = {
-    from: process.env.EMAIL,
+    from: process.env.EMAIL_USER,
     to: email,
     subject: 'Password Reset',
     text: `Click this link to reset your password: http://localhost:3000/reset-password?token=${resetToken}`

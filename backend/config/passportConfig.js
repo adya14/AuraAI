@@ -23,8 +23,9 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  fackURL: 'http://localhost:5000/auth/google/callback',
-}, async (accessToken, refreshToken, profile, done) => {
+  callbackURL: 'http://localhost:5000/auth/google/callback',
+  passReqToCallback: true, // Add this to pass the request object to the callback
+}, async (req, accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });
 
@@ -51,11 +52,10 @@ passport.use(new GoogleStrategy({
 
     done(null, user);
   } catch (error) {
-    console.error("Google OAuth Error:", error); // ✅ Log the actual error
+    console.error("Google OAuth Error:", error);
     done(error, null);
   }
 }));
-
 
 // JWT strategy
 const jwtOptions = {

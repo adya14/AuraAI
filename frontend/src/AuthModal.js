@@ -46,7 +46,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       setError('A password reset link has been sent to your email.');
       setShowForgotPassword(false);
     } catch (error) {
-      setError('Error sending reset email. Please try again.');
+      setError('Error sending reset link');
     }
   };
 

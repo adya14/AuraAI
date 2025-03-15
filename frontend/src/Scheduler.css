@@ -42,8 +42,8 @@
 
 /* Glass Morphism Container */
 .form-container {
-  background: rgba(255, 255, 255, 0.767); /* Semi-transparent white background */
-  backdrop-filter: blur(30px); /* Blur effect */
+  background: rgba(255, 255, 255, 0.82); /* Semi-transparent white background */
+  backdrop-filter: blur(40px); /* Blur effect */
   border-radius: 20px; /* Rounded corners */
   border: 5px solid rgba(255, 255, 255, 0.3); /* Light border */
   padding: 80px; /* Add some padding */

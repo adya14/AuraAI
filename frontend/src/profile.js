@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Profile.css';
-import avatar from './images/profile_avatar.jpg';
+import avatar from './images/profile.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
@@ -71,21 +71,21 @@ const Profile = ({ onClose }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-
+  
       // Split the name into firstName and lastName
       const [firstName, lastName] = name.split(' ');
-
+  
       const updatedData = {
         firstName,
         lastName,
-        currentPassword, // Include current password
+        currentPassword, // Include current password (temporary password)
         ...(newPassword && { newPassword, verificationCode }), // Include new password and verification code if newPassword is entered
       };
-
+  
       const response = await axios.put('http://localhost:5000/api/profile', updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       setUser((prev) => ({ ...prev, firstName, lastName })); // Update UI instantly
       setIsEditing(false); // Exit editing mode
       setShowVerificationPopup(false); // Hide verification code popup

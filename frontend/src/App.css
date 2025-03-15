@@ -70,11 +70,11 @@ body {
   text-align: center;
   padding: 110px 5% 10px; /* Adjusted padding to account for fixed navbar */
   background-image: url('./images/background.gif');
-  background-size: 1000px;
+  background-size: 900px;
   background-position: center center;
   background-repeat: no-repeat;
   color: rgb(21, 20, 20);
-  height: 70vh;
+  height: 80vh;
 }
 
 .hero h1 {
