@@ -21,16 +21,25 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     e.preventDefault();
     setError(''); // Clear previous errors
     const endpoint = isLogin ? '/login' : '/signup';
-
+  
     try {
       const payload = isLogin
         ? { email, password }
         : { firstName, lastName, email, password };
-
+  
       const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
+  
+      // Store the token and user data in localStorage
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+  
+      // Store the email separately in localStorage
+      localStorage.setItem('email', response.data.user.email); // Add this line
+  
+      // Trigger the onAuthSuccess callback
       onAuthSuccess(response.data.user);
+  
+      // Close the modal
       onRequestClose();
     } catch (error) {
       setError(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed')); // Show error inside modal

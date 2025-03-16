@@ -33,7 +33,7 @@ body {
 }
 
 .navbar-center {
-  flex: 1; /* Take up available space in the center */
+  flex: 3; /* Take up available space in the center */
   display: flex;
   justify-content: center; /* Center the nav links */
 }
@@ -101,7 +101,7 @@ body {
 
 /* Base Button Style */
 .hero-button {
-  background-color: #343434; /* Blue background */
+  background-color: #343434; 
   color: white; /* White text */
   padding: 10px 35px;
   font-family: "Lato", sans-serif; /* Use Lato for buttons */
@@ -132,8 +132,6 @@ body {
   padding-left: 25px;
 }
 
-
-
 /* Icon Styles */
 .icon-arrow {
   font-size: 1.1rem;
@@ -161,7 +159,7 @@ body {
 
 /* Features Section */
 .features {
-  padding: 50px 8%;
+  padding: 40px 8%;
   text-align: center;
   background-color: rgb(250, 250, 250);
 }
@@ -350,7 +348,6 @@ body {
 }
 
 /* Footer */
-/* Footer Styles */
 .footer {
   background-color: #000; /* Black background */
   color: #fff; /* White text */
@@ -417,6 +414,16 @@ body {
 
 .social-links a:hover img {
   opacity: 0.7; /* Slight fade on hover */
+}
+
+.footer-section.about-us {
+  flex: 1; /* Increase width */
+  min-width: 350px; /* Adjust minimum width */
+}
+
+.footer-logo {
+  width: 200px; /* Adjust size as needed */
+  margin-bottom: 15px; /* Space below logo */
 }
 
 /* Footer Bottom */

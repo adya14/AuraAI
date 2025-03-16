@@ -5,10 +5,12 @@ import { faArrowRight, faCalendar, faArrowRightFromBracket, faArrowUp } from '@f
 import { faUser } from '@fortawesome/free-regular-svg-icons';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
+import inverted_logo from "./images/logo_inverted.png"
 import logo from "./images/logo.png";
 import Pricing from "./Pricing";
 import Contact from "./Contact";
-import Scheduler from "./Scheduler"
+import Scheduler from "./Scheduler";
+import Caller from "./Caller";
 import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
@@ -175,7 +177,7 @@ function App() {
             >
               Contact Us
             </Link>
-            <Link to="/Scheduler" className="nav-link">Scheduler</Link>
+            <Link to="/Caller" className="nav-link">Dashboard</Link>
           </div>
         </div>
         <div className="navbar-right">
@@ -237,7 +239,7 @@ function App() {
                     document.getElementById("contact").scrollIntoView({ behavior: "smooth" }); // Smooth scroll to the contact section
                   }}
                 >
-                  Book a Call
+                  Book a Demo
                   <span className="icon-calendar">
                     <FontAwesomeIcon icon={faCalendar} />
                   </span>
@@ -381,6 +383,7 @@ function App() {
           </>
         } />
         <Route path="/contact" element={<Navigate to="/" replace />} />
+        <Route path="/Caller" element={<Caller />} /> {/* Add the Caller route */}
         <Route path="/Scheduler" element={<Scheduler />} />
 
       </Routes>
@@ -395,13 +398,15 @@ function App() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
-          <div className="footer-section">
-            <h3>About Us</h3>
-            <p>
-              moon AI is revolutionizing the hiring process with AI-powered phone interviews.
-              Our mission is to make recruitment seamless, efficient, and data-driven.
-            </p>
-          </div>
+        <div className="footer-section about-us">
+          <h3>About Us</h3>
+          <p>
+            moon AI is revolutionizing the hiring process with AI-powered phone interviews.
+            Our mission is to make recruitment seamless, efficient, and data-driven.
+          </p>
+          <img src={inverted_logo} alt="moon AI Logo" className="footer-logo" />
+        </div>
+
           <div className="footer-section">
             <h3>Quick Links</h3>
             <ul>

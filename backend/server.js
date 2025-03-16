@@ -4,6 +4,8 @@ const connectDB = require('./db');
 const passport = require('./config/passportConfig');
 const authRoutes = require('./routes/authRoutes');
 const cors = require('cors');
+const User = require("./models/user");
+const ScheduledCall = require("./models/ScheduledCall"); 
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { transcribeAudio, getAiResponse } = require('./interview');
@@ -69,50 +71,71 @@ app.post('/send-email', (req, res) => {
 // Track interview state (in-memory storage; replace with a database in production)
 const interviewState = new Map();
 
-// Route to trigger Twilio call
-app.post('/make-call', async (req, res) => {
-  const { jobRole, jobDescription, recipientPhoneNumber } = req.body;
+// Route to schedule and make a Twilio call at the specified time
+app.post("/make-call", async (req, res) => {
+  const { jobRole, jobDescription, candidates, scheduledTime, email } = req.body;
 
   try {
-    console.log("Attempting to make a call...");
+    console.log("Attempting to schedule a call...");
 
     // Log the received data for debugging
     console.log("Job Role:", jobRole);
     console.log("Job Description:", jobDescription);
-    console.log("Recipient Phone Number:", recipientPhoneNumber);
+    console.log("Candidates:", candidates);
+    console.log("Scheduled Time:", scheduledTime);
+    console.log("Email:", email); 
 
-    const call = await client.calls.create({
-      to: recipientPhoneNumber, // Use the phone number from the frontend
-      from: process.env.TWILIO_PHONE_NUMBER,
-      twiml: `
-        <Response>
-          <Say>Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?</Say>
-          <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="10">
-            <Say>Hi, I am moon, your AI interviewer. Let's begin. Please introduce yourself.</Say>
-          </Gather>
-        </Response>
-      `,
-    });
+    const now = new Date();
+    const scheduledDate = new Date(scheduledTime);
 
-    if (!call.sid) {
-      throw new Error("Twilio call SID is undefined. Call creation may have failed.");
+    // Validate the scheduled time
+    if (scheduledDate <= now) {
+      throw new Error("Scheduled time must be in the future.");
     }
 
-    // Initialize state for this call
-    interviewState.set(call.sid, {
-      conversationHistory: [],
-      questionCount: 0,
-      inQnaPhase: false,
-      isIntroductionDone: true,
-      jobRole, // Store job role in state
-      jobDescription, // Store job description in state
+    // Save the scheduled call to the database
+    const scheduledCall = new ScheduledCall({
+      jobRole,
+      jobDescription,
+      candidates,
+      scheduledTime: scheduledDate,
+      email, // Link the call to the user
     });
 
-    console.log(`Call initiated. Call SID: ${call.sid}`);
-    res.status(200).json({ message: "Call initiated", call_sid: call.sid });
+    await scheduledCall.save();
+
+    // Schedule the call using Twilio (your existing logic)
+    const delay = scheduledDate.getTime() - now.getTime();
+
+    setTimeout(async () => {
+      try {
+        const call = await client.calls.create({
+          to: candidates[0].phone, // Use the first candidate's phone number
+          from: process.env.TWILIO_PHONE_NUMBER,
+          twiml: `
+            <Response>
+              <Say>Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?</Say>
+              <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="10">
+                <Say>Hi, I am moon, your AI interviewer. Let's begin. Please introduce yourself.</Say>
+              </Gather>
+            </Response>
+          `,
+        });
+
+        if (!call.sid) {
+          throw new Error("Twilio call SID is undefined. Call creation may have failed.");
+        }
+
+        console.log(`Call initiated. Call SID: ${call.sid}`);
+      } catch (error) {
+        console.error(`Error initiating call: ${error.message}`);
+      }
+    }, delay);
+
+    res.status(200).json({ message: "Call scheduled successfully", scheduledTime });
   } catch (error) {
-    console.error(`Error making call: ${error.message}`);
-    res.status(500).json({ error: "Failed to trigger call", details: error.message });
+    console.error(`Error scheduling call: ${error.message}`);
+    res.status(500).json({ error: "Failed to schedule call", details: error.message });
   }
 });
 
@@ -218,6 +241,38 @@ app.post('/process-response', async (req, res) => {
   }
 });
 
+//  fetch scheduled calls for the user
+app.get("/scheduled-calls", async (req, res) => {
+  const { email } = req.query; 
+
+  try {
+    const scheduledCalls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 }); // Fetch calls sorted by date
+    res.status(200).json(scheduledCalls);
+  } catch (error) {
+    console.error(`Error fetching scheduled calls: ${error.message}`);
+    res.status(500).json({ error: "Failed to fetch scheduled calls", details: error.message });
+  }
+});
+app.get("/user-plan", async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    // Fetch user's active plan and call usage from the database
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      activePlan: user.activePlan || null,
+      totalCalls: user.totalCalls || 0,
+      usedCalls: user.usedCalls || 0,
+    });
+  } catch (error) {
+    console.error("Error fetching user plan:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 // Handle preflight requests for all routes
 app.options('*', cors());
 

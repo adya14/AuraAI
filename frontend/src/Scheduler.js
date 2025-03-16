@@ -40,44 +40,58 @@ const Scheduler = () => {
 
   // Handle form submission
   const handleScheduler = async () => {
-    setLoading(true); // Set loading state
-    setError(""); // Clear previous errors
-
+    setLoading(true);
+    setError("");
+  
     try {
       // Validate input
-      if (!candidates[0].name || !candidates[0].phone || !jobRole || !jobDescription) {
+      if (!candidates[0].name || !candidates[0].phone || !jobRole || !jobDescription || !interviewDateTime) {
         throw new Error("Please fill in all fields.");
       }
+  
+      const now = new Date();
+      const scheduledTime = new Date(interviewDateTime);
+  
+      if (scheduledTime <= now) {
+        throw new Error("Interview date and time must be in the future.");
+      }
 
+      const email = localStorage.getItem("email");
+
+      if (!email) {
+        throw new Error("User email not found. Please log in.");
+      }
+  
       // Prepare data to send to the backend
       const data = {
         jobRole,
         jobDescription,
-        recipientPhoneNumber: candidates[0].phone, // Use the first candidate's phone number
+        candidates, // Send all candidates to the backend
+        scheduledTime: scheduledTime.toISOString(),
+        email,
       };
-
+  
       // Make a POST request to the /make-call API
       const response = await axios.post("http://localhost:5000/make-call", data);
-
-      console.log("Call scheduled with the following details:");
-      console.log(`Candidate: ${candidates[0].name}, Phone: ${candidates[0].phone}`);
+  
+      console.log("Calls scheduled with the following details:");
       console.log("Job Role:", jobRole);
       console.log("Job Description:", jobDescription);
+      console.log("Scheduled Time:", scheduledTime.toLocaleString());
       console.log("API Response:", response.data);
-
-      alert("Call scheduled successfully!");
+  
+      alert(`Calls scheduled successfully for ${scheduledTime.toLocaleString()}!`);
     } catch (error) {
       console.error("Error scheduling call:", error);
       setError(error.response?.data?.error || error.message || "Failed to schedule call.");
       alert("Failed to schedule call. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <div className="scheduler">
-      <h1>Welcome HRs! </h1>
       <h2> Let's Automate That Phone Interview for You.</h2>
       <p className="tagline">
         Say goodbye to manual scheduling and hello to AI-powered interviews. Let’s make hiring smarter, faster, and cooler

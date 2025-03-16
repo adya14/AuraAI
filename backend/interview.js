@@ -2,8 +2,8 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Constants for role and job description
-const ROLE = "SDE"; // Replace with actual role
-const JOB_DESCRIPTION = "Python, ML, Cloud"; // Replace with actual job description
+// const ROLE = "SDE"; 
+// const JOB_DESCRIPTION = "Python, ML, Cloud"; 
 
 /**
  * Convert audio to text using OpenAI's Whisper API.

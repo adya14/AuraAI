@@ -5,6 +5,7 @@ const User = require('../models/user');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
 const Razorpay = require('razorpay');
+const ScheduledCall = require("../models/ScheduledCall"); 
 require('../config/passportConfig');
 require('dotenv').config();
 
