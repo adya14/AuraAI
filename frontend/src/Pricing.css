@@ -62,9 +62,20 @@
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
 }
 
 .pricing-cards .card .pricing-button:hover {
-  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

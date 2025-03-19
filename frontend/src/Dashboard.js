@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faArrowRight, faSearch } from '@fortawesome/free-solid-svg-icons';
-import axios from "axios"; // Import axios for making HTTP requests
-import "./Caller.css";
+import { faPhone, faArrowRight, faSearch } from '@fortawesome/free-solid-svg-icons'; // Removed faTrash
+import axios from "axios"; 
+import "./Dashboard.css";
 
 const Caller = () => {
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ const Caller = () => {
       </div>
 
       {/* Four Small Square Containers */}
-      <div className="stats-container">
+      <div className="stats-container scroll-reveal">
         {/* Container 1: Current Active Plan */}
         <div className="stat-card">
           <h3>Current Plan</h3>
@@ -116,7 +116,7 @@ const Caller = () => {
       </div>
 
       {/* Scheduled Calls Container */}
-      <div className="scheduled-calls-container">
+      <div className="scheduled-calls-container scroll-reveal">
         <h3>Scheduled Calls</h3>
 
         {/* Search Bar */}
@@ -137,8 +137,8 @@ const Caller = () => {
               <th>Candidate Name</th>
               <th>Phone Number</th>
               <th>Job Role</th>
-              <th>Date</th> {/* New column for date */}
-              <th>Time</th> {/* New column for time */}
+              <th>Date</th>
+              <th>Time</th>
             </tr>
           </thead>
           <tbody>
@@ -153,8 +153,8 @@ const Caller = () => {
                     <td>{candidate.name}</td>
                     <td>{candidate.phone}</td>
                     <td>{call.jobRole}</td>
-                    <td>{formatDate(call.scheduledTime)}</td> {/* Display date */}
-                    <td>{formatTime(call.scheduledTime)}</td> {/* Display time */}
+                    <td>{formatDate(call.scheduledTime)}</td>
+                    <td>{formatTime(call.scheduledTime)}</td>
                   </tr>
                 ))
               )
@@ -164,7 +164,7 @@ const Caller = () => {
       </div>
 
       {/* History Calls Container */}
-      <div className="history-calls-container">
+      <div className="history-calls-container scroll-reveal">
         <h3>History</h3>
 
         {/* Search Bar for History Calls */}

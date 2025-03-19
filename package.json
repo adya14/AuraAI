@@ -17,6 +17,7 @@
     "passport-jwt": "^4.0.1",
     "python-shell": "^5.0.0",
     "razorpay": "^2.9.6",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-intersection-observer": "^9.16.0"
   }
 }

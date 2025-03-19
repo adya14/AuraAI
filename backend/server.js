@@ -52,7 +52,7 @@ app.post('/send-email', (req, res) => {
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'adyatwr@gmail.com',
+    to: 'moon.voice.ai@gmail.com',
     subject: 'New Message from moonAI Contact Form',
     text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
   };
@@ -241,7 +241,7 @@ app.post('/process-response', async (req, res) => {
   }
 });
 
-//  fetch scheduled calls for the user
+// Fetch scheduled calls for the user
 app.get("/scheduled-calls", async (req, res) => {
   const { email } = req.query; 
 
@@ -253,6 +253,7 @@ app.get("/scheduled-calls", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch scheduled calls", details: error.message });
   }
 });
+
 app.get("/user-plan", async (req, res) => {
   const { email } = req.query;
 
@@ -273,6 +274,7 @@ app.get("/user-plan", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // Handle preflight requests for all routes
 app.options('*', cors());
 

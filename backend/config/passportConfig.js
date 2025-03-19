@@ -44,7 +44,7 @@ passport.use(new GoogleStrategy({
         email: profile.emails[0].value,
         firstName: extractedFirstName,
         lastName: profile.name?.familyName || '', // Last name can be empty
-        plan: 'No plan selected' // Set default plan
+        plan: 'No active plan' // Set default plan
       });
 
       await user.save();

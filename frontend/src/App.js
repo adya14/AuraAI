@@ -10,7 +10,7 @@ import logo from "./images/logo.png";
 import Pricing from "./Pricing";
 import Contact from "./Contact";
 import Scheduler from "./Scheduler";
-import Caller from "./Caller";
+import Dashboard from "./Dashboard";
 import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
@@ -27,6 +27,27 @@ function App() {
   const [activeIndex, setActiveIndex] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false); // State to control the visibility of the back-to-top button
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.2 } // Trigger when 20% of the element is visible
+    );
+
+    const elements = document.querySelectorAll(".scroll-reveal");
+    elements.forEach(el => observer.observe(el));
+
+    return () => {
+      elements.forEach(el => observer.unobserve(el));
+    };
+  }, [location.pathname]);
 
     // Handle scroll to a specific section
     const scrollToSection = (sectionId) => {
@@ -61,6 +82,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('email');
     setIsAuthenticated(false);
     setUser(null);
     navigate('/');
@@ -172,12 +194,11 @@ function App() {
               onClick={(e) => {
                 e.preventDefault();
                 scrollToSection("contact");
-                // document.getElementById("contact").scrollIntoView({ behavior: "smooth" });
               }}
             >
               Contact Us
             </Link>
-            <Link to="/Caller" className="nav-link">Dashboard</Link>
+            <Link to="/Dashboard" className="nav-link">Dashboard</Link>
           </div>
         </div>
         <div className="navbar-right">
@@ -209,6 +230,7 @@ function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onRequestClose={() => setIsAuthModalOpen(false)}
+        // onAuthSuccess={(user) => {console.log("User autheticated:", user);}}
         onAuthSuccess={handleAuthSuccess}
       />
 
@@ -217,7 +239,7 @@ function App() {
         <Route path="/" element={
           <>
             {/* Hero Section */}
-            <header className="hero">
+            <header className="hero scroll-reveal">
               <h1>The Future of AI-Powered Interviews</h1>
               <p>Experience seamless AI-driven phone interviews to automate your recruiting process.</p>
               <div className="hero-buttons">
@@ -248,7 +270,7 @@ function App() {
             </header>
 
             {/* Features Section */}
-            <section className="features">
+            <section className="features scroll-reveal">
               <h2>Why Choose moon AI?</h2>
               <div className="feature-cards">
                 <div className="card">
@@ -271,7 +293,7 @@ function App() {
             {/* How It Works Section */}
             <section className="how-it-works">
               <h2>How It Works?</h2>
-              <div className="point point-1">
+              <div className="point point-1 scroll-reveal">
                 <div className="point-content">
                   <h3>Schedule an Interview</h3>
                   <p>
@@ -280,7 +302,7 @@ function App() {
                 </div>
                 <div className="point-number">01</div>
               </div>
-              <div className="point point-2">
+              <div className="point point-2 scroll-reveal">
                 <div className="point-number">02</div>
                 <div className="point-content">
                   <h3>Enter Candidate Details</h3>
@@ -289,7 +311,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <div className="point point-3">
+              <div className="point point-3 scroll-reveal">
                 <div className="point-content">
                   <h3>Candidate Joins the Interview</h3>
                   <p>
@@ -298,7 +320,7 @@ function App() {
                 </div>
                 <div className="point-number">03</div>
               </div>
-              <div className="point point-4">
+              <div className="point point-4 scroll-reveal">
                 <div className="point-number">04</div>
                 <div className="point-content">
                   <h3>AI Conducts the Interview</h3>
@@ -307,7 +329,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <div className="point point-5">
+              <div className="point point-5 scroll-reveal">
                 <div className="point-content">
                   <h3>Data-Driven Insights</h3>
                   <p>
@@ -316,7 +338,7 @@ function App() {
                 </div>
                 <div className="point-number">05</div>
               </div>
-              <div className="point point-6">
+              <div className="point point-6 scroll-reveal">
                 <div className="point-number">06</div>
                 <div className="point-content">
                   <h3>Review and Hire</h3>
@@ -331,7 +353,7 @@ function App() {
             <section className="faq">
               <h2>Frequently Asked Questions</h2>
               <div className="faq-container">
-                <div className={`faq-item ${activeIndex === 0 ? "active" : ""}`}>
+                <div className={`faq-item scroll-reveal ${activeIndex === 0 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(0)}>
                     What is moon AI?
                     <span className="faq-icon">+</span>
@@ -342,7 +364,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item ${activeIndex === 1 ? "active" : ""}`}>
+                <div className={`faq-item scroll-reveal ${activeIndex === 1 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(1)}>
                     How does moon AI work?
                     <span className="faq-icon">+</span>
@@ -353,7 +375,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item ${activeIndex === 2 ? "active" : ""}`}>
+                <div className={`faq-item scroll-reveal ${activeIndex === 2 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(2)}>
                     Is moon AI free to use?
                     <span className="faq-icon">+</span>
@@ -364,7 +386,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item ${activeIndex === 3 ? "active" : ""}`}>
+                <div className={`faq-item scroll-reveal ${activeIndex === 3 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(3)}>
                     Can I customize the interview questions?
                     <span className="faq-icon">+</span>
@@ -383,7 +405,7 @@ function App() {
           </>
         } />
         <Route path="/contact" element={<Navigate to="/" replace />} />
-        <Route path="/Caller" element={<Caller />} /> {/* Add the Caller route */}
+        <Route path="/Dashboard" element={<Dashboard />} /> 
         <Route path="/Scheduler" element={<Scheduler />} />
 
       </Routes>
@@ -418,11 +440,13 @@ function App() {
             </ul>
           </div>
           <div className="footer-section">
+            <div className="footer-section contact-us">
             <h3>Contact Us</h3>
             <ul>
-              <li>Email: adyatwr@gmail.com</li>
+              <li>Email: moon.voice.ai@gmail.com</li>
               <li>Phone: +91 88516 19182</li>
             </ul>
+            </div>
           </div>
           <div className="footer-section">
             <h3>Follow Us</h3>

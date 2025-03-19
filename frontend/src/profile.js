@@ -209,7 +209,7 @@ const Profile = ({ onClose }) => {
           {/* Plan Field (Non-Editable) */}
           <div className="profile-field">
             <label>Plan:</label>
-            <span>{user.plan || 'No plan selected'}</span>
+            <span>{user.plan || 'No active plan'}</span>
           </div>
 
           {/* Buttons Section */}

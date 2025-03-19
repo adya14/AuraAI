@@ -8,6 +8,17 @@ body {
   overflow-x: hidden;
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Custom Navbar */
 .custom-navbar {
   display: flex;
@@ -417,7 +428,7 @@ body {
 }
 
 .footer-section.about-us {
-  flex: 1; /* Increase width */
+  flex: 1; 
   min-width: 350px; /* Adjust minimum width */
 }
 
@@ -445,6 +456,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
+  background-color: #ffffffda;
   transform: translate(-50%, -50%);
   background: rgba(252, 252, 252, 0.619); /* Semi-transparent background */
   backdrop-filter: blur(30px); /* Blur effect for glass morphism */
@@ -468,6 +480,20 @@ body {
 }
 
 /* Modal Content Styling */
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
+  border-radius: 35px; /* Rounded corners */
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.397); /* Soft shadow */
+  z-index: 1001;
+}
+
 .modal h2 {
   text-align: center;
   margin-bottom: 20px;
@@ -504,14 +530,14 @@ body {
   color: white;
   padding: 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: 20px; /* Updated border-radius */
   font-size: 16px;
   cursor: pointer;
   transition: transform 0.3s;
 }
 
 .modal button[type="submit"]:hover {
-  transform: scale(1.1); 
+  transform: scale(1.03); 
 }
 
 .modal button[type="button"] {
@@ -561,7 +587,6 @@ body {
   margin-top: 10px;
   text-align: center;
 }
-
 /* Navbar Buttons */
 .signup-button {
   background-color: #222223;

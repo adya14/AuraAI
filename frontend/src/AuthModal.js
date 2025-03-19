@@ -16,6 +16,23 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
   const [resetEmail, setResetEmail] = useState('');
   const [error, setError] = useState(''); // Store error messages
 
+  // Function to reset all form fields
+  const resetFormFields = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPassword('');
+    setResetEmail('');
+    setError('');
+    setShowForgotPassword(false);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    resetFormFields(); // Reset form fields
+    onRequestClose(); // Close the modal
+  };
+
   // Handle login/signup submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,17 +49,15 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       // Store the token and user data in localStorage
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-  
-      // Store the email separately in localStorage
-      localStorage.setItem('email', response.data.user.email); // Add this line
+      localStorage.setItem('email', response.data.user.email);
   
       // Trigger the onAuthSuccess callback
       onAuthSuccess(response.data.user);
   
-      // Close the modal
-      onRequestClose();
+      // Close the modal and reset form fields
+      handleModalClose();
     } catch (error) {
-      setError(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed')); // Show error inside modal
+      setError(error.response?.data?.error || (isLogin ? 'Login failed' : 'Signup failed'));
     }
   };
 
@@ -78,7 +93,10 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       .then(response => {
         const userData = response.data.user;
         localStorage.setItem('user', JSON.stringify(userData));
-        onAuthSuccess(userData);
+        localStorage.setItem('email', userData.email);
+        if (typeof onAuthSuccess === 'function') {
+          onAuthSuccess(userData);
+        }
       })
       .catch(error => {
         console.error('Error fetching user profile:', error);
@@ -89,7 +107,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
   return (
     <ReactModal
       isOpen={isOpen}
-      onRequestClose={onRequestClose}
+      onRequestClose={handleModalClose}
       contentLabel="Login/Signup Modal"
       className="modal"
       overlayClassName="overlay"

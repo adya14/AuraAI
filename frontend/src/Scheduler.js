@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios"; // Import axios for making HTTP requests
-import "./Scheduler.css"; // Import the CSS file
+import axios from "axios";
+import "./Scheduler.css";
 
 const Scheduler = () => {
   const [candidates, setCandidates] = useState([{ name: "", phone: "+91" }]); // Initialize phone with +91
@@ -9,6 +9,7 @@ const Scheduler = () => {
   const [interviewDateTime, setInterviewDateTime] = useState("");
   const [loading, setLoading] = useState(false); // Track loading state
   const [error, setError] = useState(""); // Track error messages
+  const [successMessage, setSuccessMessage] = useState(""); // Track success messages
 
   // Handle adding more candidate fields
   const addCandidateField = () => {
@@ -42,16 +43,17 @@ const Scheduler = () => {
   const handleScheduler = async () => {
     setLoading(true);
     setError("");
-  
+    setSuccessMessage("");
+
     try {
       // Validate input
       if (!candidates[0].name || !candidates[0].phone || !jobRole || !jobDescription || !interviewDateTime) {
         throw new Error("Please fill in all fields.");
       }
-  
+
       const now = new Date();
       const scheduledTime = new Date(interviewDateTime);
-  
+
       if (scheduledTime <= now) {
         throw new Error("Interview date and time must be in the future.");
       }
@@ -61,7 +63,7 @@ const Scheduler = () => {
       if (!email) {
         throw new Error("User email not found. Please log in.");
       }
-  
+
       // Prepare data to send to the backend
       const data = {
         jobRole,
@@ -70,21 +72,27 @@ const Scheduler = () => {
         scheduledTime: scheduledTime.toISOString(),
         email,
       };
-  
+
       // Make a POST request to the /make-call API
       const response = await axios.post("http://localhost:5000/make-call", data);
-  
+
       console.log("Calls scheduled with the following details:");
       console.log("Job Role:", jobRole);
       console.log("Job Description:", jobDescription);
       console.log("Scheduled Time:", scheduledTime.toLocaleString());
       console.log("API Response:", response.data);
-  
-      alert(`Calls scheduled successfully for ${scheduledTime.toLocaleString()}!`);
+
+      // Set success message
+      setSuccessMessage(`Calls scheduled successfully for ${scheduledTime.toLocaleString()}!`);
+
+      // Reset the form fields after successful scheduling
+      setCandidates([{ name: "", phone: "+91" }]); // Reset to one empty candidate field
+      setJobRole("");
+      setJobDescription("");
+      setInterviewDateTime("");
     } catch (error) {
       console.error("Error scheduling call:", error);
       setError(error.response?.data?.error || error.message || "Failed to schedule call.");
-      alert("Failed to schedule call. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -185,7 +193,8 @@ const Scheduler = () => {
           {loading ? "Scheduling..." : "Schedule"}
         </button>
 
-        {/* Display Errors Here */}
+        {/* Display Success and Error Messages Here */}
+        {successMessage && <p className="success-message">{successMessage}</p>}
         {error && <p className="error-message">{error}</p>}
       </div>
     </div>
