@@ -2,3 +2,4 @@ twenv/
 /backend/.env
 __pycache__/
 /backend/node_modules
+node_modules/
