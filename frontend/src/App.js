@@ -134,7 +134,7 @@ function App() {
     const tokenFromUrl = urlParams.get('token');
     if (tokenFromUrl) {
       localStorage.setItem('token', tokenFromUrl);
-      axios.get('http://localhost:5000/api/profile', {
+      axios.get('moonai-production.up.railway.app/api/profile', {
         headers: {
           Authorization: `Bearer ${tokenFromUrl}`,
         },

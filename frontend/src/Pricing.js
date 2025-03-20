@@ -52,7 +52,7 @@ const Pricing = () => {
 
     try {
       // Create a payment order on the backend
-      const response = await axios.post("http://localhost:5000/api/create-order", {
+      const response = await axios.post("moonai-production.up.railway.app/api/create-order", {
         plan: planName,
         amount: price,
       });

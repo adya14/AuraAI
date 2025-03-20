@@ -50,7 +50,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
         ? { email, password }
         : { firstName, lastName, email, password };
   
-      const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
+      const response = await axios.post(`moonai-production.up.railway.app${endpoint}`, payload);
   
       // Store the token and user data in localStorage
       localStorage.setItem('token', response.data.token);
@@ -72,7 +72,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     e.preventDefault();
     setError(''); // Clear previous errors
     try {
-      await axios.post('http://localhost:5000/api/forgot-password', { email: resetEmail });
+      await axios.post('moonai-production.up.railway.app/api/forgot-password', { email: resetEmail });
       setError('OTP has been sent to your email.');
       setOtpSent(true);
     } catch (error) {
@@ -86,7 +86,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     setError(''); // Clear previous errors
   
     try {
-      const response = await axios.post('http://localhost:5000/api/reset-password', {
+      const response = await axios.post('moonai-production.up.railway.app/api/reset-password', {
         email: resetEmail,
         otp,
         newPassword,
@@ -122,7 +122,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
 
     if (token) {
       localStorage.setItem('token', token);
-      axios.get('http://localhost:5000/api/profile', {
+      axios.get('moonai-production.up.railway.app/api/profile', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(response => {
@@ -257,7 +257,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
           {/* Google Login Button */}
           <div className="google-login">
             <p>Or {isLogin ? 'login' : 'sign up'} with:</p>
-            <a href="http://localhost:5000/auth/google" className="google-button">
+            <a href="moonai-production.up.railway.app/auth/google" className="google-button">
               <img src={googleicon} alt="Google Icon" />
               <span>Google</span>
             </a>

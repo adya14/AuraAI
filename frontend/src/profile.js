@@ -33,7 +33,7 @@ const Profile = ({ onClose }) => {
           return;
         }
 
-        const response = await axios.get('http://localhost:5000/api/profile', {
+        const response = await axios.get('moonai-production.up.railway.app/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -82,7 +82,7 @@ const Profile = ({ onClose }) => {
         ...(newPassword && { newPassword, verificationCode }), // Include new password and verification code if newPassword is entered
       };
   
-      const response = await axios.put('http://localhost:5000/api/profile', updatedData, {
+      const response = await axios.put('moonai-production.up.railway.app/api/profile', updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -101,7 +101,7 @@ const Profile = ({ onClose }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await axios.delete('http://localhost:5000/api/profile', {
+      await axios.delete('moonai-production.up.railway.app/api/profile', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -119,7 +119,7 @@ const Profile = ({ onClose }) => {
       if (!token) return;
 
       const response = await axios.post(
-        'http://localhost:5000/api/send-verification-code',
+        'moonai-production.up.railway.app/api/send-verification-code',
         { currentPassword }, // Include current password
         {
           headers: { Authorization: `Bearer ${token}` },

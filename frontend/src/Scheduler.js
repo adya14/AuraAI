@@ -74,7 +74,7 @@ const Scheduler = () => {
       };
 
       // Make a POST request to the /make-call API
-      const response = await axios.post("http://localhost:5000/make-call", data);
+      const response = await axios.post("moonai-production.up.railway.app/make-call", data);
 
       console.log("Calls scheduled with the following details:");
       console.log("Job Role:", jobRole);
