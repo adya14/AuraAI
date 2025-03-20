@@ -353,7 +353,7 @@ function App() {
             <section className="faq">
               <h2>Frequently Asked Questions</h2>
               <div className="faq-container">
-                <div className={`faq-item scroll-reveal ${activeIndex === 0 ? "active" : ""}`}>
+                <div className={`faq-item ${activeIndex === 0 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(0)}>
                     What is moon AI?
                     <span className="faq-icon">+</span>
@@ -364,7 +364,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item scroll-reveal ${activeIndex === 1 ? "active" : ""}`}>
+                <div className={`faq-item ${activeIndex === 1 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(1)}>
                     How does moon AI work?
                     <span className="faq-icon">+</span>
@@ -375,7 +375,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item scroll-reveal ${activeIndex === 2 ? "active" : ""}`}>
+                <div className={`faq-item ${activeIndex === 2 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(2)}>
                     Is moon AI free to use?
                     <span className="faq-icon">+</span>
@@ -386,7 +386,7 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div className={`faq-item scroll-reveal ${activeIndex === 3 ? "active" : ""}`}>
+                <div className={`faq-item ${activeIndex === 3 ? "active" : ""}`}>
                   <button className="faq-question" onClick={() => toggleFAQ(3)}>
                     Can I customize the interview questions?
                     <span className="faq-icon">+</span>
