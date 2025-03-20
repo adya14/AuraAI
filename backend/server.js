@@ -275,6 +275,11 @@ app.get("/user-plan", async (req, res) => {
   }
 });
 
+// Catch-all route to serve the frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
+
 // Handle preflight requests for all routes
 app.options('*', cors());
 
