@@ -34,16 +34,25 @@ router.post('/signup', async (req, res) => {
 // Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const user = await User.findOne({ email });
-    if (!user) throw new Error('User not found');
 
-    if (!user.password) {
-      return res.status(400).json({ error: "The account was created using Google. Please log in using Google." });
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
     }
 
+    // Ensure the user has a password (not a Google account)
+    if (!user.password) {
+      return res.status(400).json({ error: 'The account was created using Google. Please log in using Google.' });
+    }
+
+    // Compare the entered password with the hashed password in the database
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error('Invalid credentials');
+
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
     // Generate a token with userId in the payload
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -195,28 +204,78 @@ router.delete('/api/profile', passport.authenticate('jwt', { session: false }), 
   }
 });
 
-// Forgot Password Route
+// Forgot password 
 router.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ error: "User not found" });
 
-  const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
 
+  // Generate a random 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  user.otp = otp;
+  user.otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+  await user.save();
+
+  // Send OTP via email (using nodemailer)
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
   });
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'Password Reset',
-    text: `Click this link to reset your password: http://localhost:3000/reset-password?token=${resetToken}`
+    subject: 'Password Reset OTP',
+    text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes`,
   };
+  console.log(`OTP for ${email}: ${otp}, Expires at: ${new Date(user.otpExpiry).toLocaleString()}`);
 
   await transporter.sendMail(mailOptions);
-  res.json({ message: "Reset link sent" });
+  res.json({ message: "OTP sent to your email" });
+});
+
+router.post('/api/reset-password', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !otp || !newPassword) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Log OTP and expiry for debugging
+    console.log(`Received OTP: ${otp}, Stored OTP: ${user.otp}, Expiry: ${new Date(user.otpExpiry).toLocaleString()}`);
+
+    // Ensure OTP is correct and not expired
+    if (!user.otp || user.otp !== otp || !user.otpExpiry || user.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP.' });
+    }
+
+    // Ensure password meets security criteria
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+
+    // new password before saving
+    user.password = newPassword;
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
 });
 
 // Initialize Razorpay instance

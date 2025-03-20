@@ -14,7 +14,10 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState(''); // Store error messages
+  const [otpSent, setOtpSent] = useState(false); // Track if OTP has been sent
 
   // Function to reset all form fields
   const resetFormFields = () => {
@@ -23,8 +26,11 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     setEmail('');
     setPassword('');
     setResetEmail('');
+    setOtp('');
+    setNewPassword('');
     setError('');
     setShowForgotPassword(false);
+    setOtpSent(false);
   };
 
   // Handle modal close
@@ -67,10 +73,39 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
     setError(''); // Clear previous errors
     try {
       await axios.post('http://localhost:5000/api/forgot-password', { email: resetEmail });
-      setError('A password reset link has been sent to your email.');
-      setShowForgotPassword(false);
+      setError('OTP has been sent to your email.');
+      setOtpSent(true);
     } catch (error) {
-      setError('Error sending reset link');
+      setError('Error sending OTP');
+    }
+  };
+
+  // Handle OTP and new password submission
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError(''); // Clear previous errors
+  
+    try {
+      const response = await axios.post('http://localhost:5000/api/reset-password', {
+        email: resetEmail,
+        otp,
+        newPassword,
+      });
+  
+      // If the password reset is successful
+      if (response.data.success) {
+        setError('Password reset successfully.');
+        setShowForgotPassword(false);
+        setOtpSent(false);
+      } else {
+        setError(response.data.message || 'Error resetting password');
+      }
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Error resetting password:', error.response?.data || error.message);
+  
+      // Display a user-friendly error message
+      setError(error.response?.data?.message || 'Error resetting password.');
     }
   };
 
@@ -115,7 +150,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
       {showForgotPassword ? (
         <div>
           <h2>Forgot Password</h2>
-          <form onSubmit={handleForgotPassword}>
+          <form onSubmit={otpSent ? handleResetPassword : handleForgotPassword}>
             <input
               type="email"
               placeholder="Enter your email"
@@ -123,8 +158,26 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
               onChange={(e) => setResetEmail(e.target.value)}
               required
             />
+            {otpSent && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </>
+            )}
             {error && <p className="error-message">{error}</p>}
-            <button type="submit">Send Reset Link</button>
+            <button type="submit">{otpSent ? 'Reset Password' : 'Send OTP'}</button>
           </form>
           <button
             type="button"
