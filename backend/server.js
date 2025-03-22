@@ -120,7 +120,7 @@ app.post("/make-call", async (req, res) => {
           twiml: `
             <Response>
               <Say>Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?</Say>
-              <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="10">
+              <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="10">
               </Gather>
             </Response>
           `,
@@ -169,7 +169,7 @@ app.post('/process-response', async (req, res) => {
       const twiml = `
         <Response>
           <Say>I didn't hear anything. Please try again.</Say>
-          <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="5">
+          <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="5">
             <Say>..</Say>
           </Gather>
         </Response>
@@ -227,7 +227,7 @@ app.post('/process-response', async (req, res) => {
     const twiml = `
       <Response>
         <Say>${aiResponse}</Say>
-        <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="5">
+        <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="5">
           <Say>Please continue.</Say>
         </Gather>
       </Response>
@@ -283,7 +283,9 @@ app.get("/user-plan", async (req, res) => {
 app.options('*', cors());
 
 // Catch-all route to serve the frontend
-
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+// });
 
 // Start the server
 const PORT = process.env.PORT || 5000;

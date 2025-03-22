@@ -11,6 +11,7 @@ import Pricing from "./Pricing";
 import Contact from "./Contact";
 import Scheduler from "./Scheduler";
 import Dashboard from "./Dashboard";
+import LegalPages from "./LegalPages";
 import facebookIcon from "./images/facebook.png";
 import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
@@ -407,7 +408,8 @@ function App() {
         <Route path="/contact" element={<Navigate to="/" replace />} />
         <Route path="/Dashboard" element={<Dashboard />} /> 
         <Route path="/Scheduler" element={<Scheduler />} />
-
+        <Route path="/privacyAndTerms" element={<LegalPages />} />
+        <Route path="/refund-cancellation-policy" element={<LegalPages />} />
       </Routes>
 
       {/* Back to Top Button */}
@@ -428,17 +430,24 @@ function App() {
           </p>
           <img src={inverted_logo} alt="moon AI Logo" className="footer-logo" />
         </div>
-
-          <div className="footer-section">
-            <h3>Quick Links</h3>
-            <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/pricing">Pricing</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-              <li><Link to="/terms-of-service">Terms of Service</Link></li>
-            </ul>
-          </div>
+        <div className="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li>
+              <Link
+                to="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection("contact");
+                }}
+              >
+                Contact
+              </Link>
+            </li>
+            <li><Link to="/refund-cancellation-policy">Privacy and terms</Link></li>
+            <li><Link to="/refund-cancellation-policy">Refund Policy</Link></li>
+          </ul>
+        </div>
           <div className="footer-section">
             <div className="footer-section contact-us">
             <h3>Contact Us</h3>
@@ -464,7 +473,7 @@ function App() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 moon AI. All rights reserved.</p>
+          <p>&copy; 2025 moon AI. All rights reserved.</p>
         </div>
       </footer>
     </div>

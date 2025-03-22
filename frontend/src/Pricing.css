@@ -6,7 +6,7 @@
 
 .pricing h1 {
   font-family: "Merriweather", serif;
-  font-size: 2.1rem; 
+  font-size: 2.1rem;
   margin-bottom: 40px;
   color: #484848;
 }
@@ -17,51 +17,54 @@
   align-items: center;
   gap: 20px;
   position: relative;
-  height: 400px; /* Adjust height as needed */
-  overflow: hidden; /* Hide overflowing cards */
+  height: 400px; /* Keep height fixed for carousel */
+  overflow: hidden;
 }
 
+/* Keep Shape Consistent While Scaling */
 .pricing-cards .card {
-  background-image: url('./images/sky2.jpg'); /* Path to your sky image */
-  background-size: cover; /* Ensure the image covers the entire card */
-  background-position: center; /* Center the image */
+  background-image: url('./images/sky2.jpg'); /* Background image */
+  background-size: cover;
+  background-position: center;
   padding: 20px;
   border-radius: 20px;
-  width: 25%;
-  height: 80%;
+  width: 25vw; /* Scales with screen width */
+  height: 60%; /* Maintain aspect ratio */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.5s ease, opacity 0.5s ease, z-index 0.5s ease;
   position: absolute;
 }
 
+/* Make Text Responsive */
 .pricing-cards .card h2 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
+  font-size: 1.8vw; /* Scale with screen size */
+  margin-bottom: 2vh;
 }
 
 .pricing-cards .card p {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
+  font-size: 1.5vw; /* Adjust dynamically */
+  margin-bottom: 2vh;
 }
 
 .pricing-cards .card ul {
   list-style: none;
   padding: 0;
-  margin-bottom: 20px;
+  margin-bottom: 2vh;
 }
 
 .pricing-cards .card ul li {
-  font-size: 1rem;
-  margin-bottom: 10px;
+  font-size: 1vw; /* Responsive text */
+  margin-bottom: 1vh;
 }
 
 .pricing-cards .card .pricing-button {
   background-color: #2f2f2f;
   color: white;
-  padding: 10px 20px;
+  padding: 1vh 2vw;
   border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-size: 1vw; /* Scale button text */
   transition: all 0.3s;
 }
 
@@ -78,4 +81,66 @@
 .scroll-reveal.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Keep Shape But Scale Text on Tablets */
+@media (max-width: 1024px) {
+
+  .pricing-cards {
+    height: 250px;
+  }
+
+  .pricing-cards .card {
+    width: 28vw;
+    height: 75%;
+    padding: 15px;
+  }
+
+  .pricing-cards .card h2 {
+    font-size: 1.6vw;
+  }
+
+  .pricing-cards .card p {
+    font-size: 1.4vw;
+  }
+
+  .pricing-cards .card ul li {
+    font-size: 0.9vw;
+  }
+
+  .pricing-cards .card .pricing-button {
+    font-size: 0.9vw;
+    padding: 0.8vh 1.8vw;
+  }
+}
+
+/* Mobile: Keep Shape, Scale Down Text & Containers */
+@media (max-width: 768px) {
+
+  .pricing-cards {
+    height: 220px; /* Adjust height */
+  }
+
+  .pricing-cards .card {
+    width: 30vw; /* Keep shape, adjust size */
+    height: 70%;
+    padding: 7px;
+  }
+
+  .pricing-cards .card h2 {
+    font-size: 1.5vw;
+  }
+
+  .pricing-cards .card p {
+    font-size: 1.2vw;
+  }
+
+  .pricing-cards .card ul li {
+    font-size: 0.85vw;
+  }
+
+  .pricing-cards .card .pricing-button {
+    font-size: 0.85vw;
+    padding: 0.7vh 1.5vw;
+  }
 }

@@ -1,8 +1,6 @@
 /* General styles */
 body {
-  font-family: "Lato", sans-serif; /* Use Lato for buttons */
-  margin: 0;
-  padding: 0;
+  font-family: "Lato", sans-serif;
   background-color: rgb(250, 250, 250);
   color: #333;
   overflow-x: hidden;
@@ -25,7 +23,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px 1%;
-  background-color: rgba(250, 250, 250, 0.909); /* White background */
+  background-color: rgba(250, 250, 250, 0);
   position: static;
   width: 100%;
   top: 0;
@@ -33,120 +31,114 @@ body {
 }
 
 .navbar-left {
-  flex: 1; /* Take up available space on the left */
+  flex: 1;
   display: flex;
-  justify-content: flex-start; /* Align logo to the left */
+  justify-content: flex-start;
 }
 
 .navbar-logo {
-  height: 50px; /* Adjust logo height */
+  height: 50px;
   margin-left: 20%;
 }
 
 .navbar-center {
-  flex: 3; /* Take up available space in the center */
+  flex: 3;
   display: flex;
-  justify-content: center; /* Center the nav links */
+  justify-content: center;
 }
 
 .nav-links-container {
   display: flex;
-  background-color: rgb(42, 42, 42); /* Dark background for nav links */
+  background-color: rgb(42, 42, 42);
   padding: 10px 30px;
-  border-radius: 25px; /* Rounded edges */
-  box-shadow: 0 2px 10px rgba(10, 10, 10, 0.1); /* Subtle shadow */
+  border-radius: 25px;
+  box-shadow: 0 2px 10px rgba(10, 10, 10, 0.1);
 }
 
 .nav-link {
   margin: 0 15px;
-  color: #ffffff; /* White text color */
-  font-weight: 500; /* Medium font weight */
-  text-decoration: none; /* Remove underline */
-  transition: transform 0.3s ease; /* Smooth transition for scaling */
+  color: #ffffff;
+  font-weight: 500;
+  text-decoration: none;
+  transition: transform 0.3s ease;
 }
 
 .nav-link:hover {
-  transform: scale(1.1); /* Make the text 20% bigger on hover */
+  transform: scale(1.1);
 }
 
 .navbar-right {
-  flex: 1; /* Take up available space on the right */
+  flex: 1;
   display: flex;
-  justify-content: flex-end; /* Align buttons to the right */
-  gap: 10px; /* Spacing between buttons */
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* Hero Section */
 .hero {
   text-align: center;
-  padding: 110px 5% 10px; /* Adjusted padding to account for fixed navbar */
+  padding: 110px 5% 10px;
   background-image: url('./images/background.gif');
-  background-size: 900px;
+  background-size: 1000px;
   background-position: center center;
   background-repeat: no-repeat;
   color: rgb(21, 20, 20);
-  height: 80vh;
+  height: 90vh;
 }
 
 .hero h1 {
-  font-family: "Merriweather", serif; /* Apply Merriweather font */
+  font-family: "Merriweather", serif;
   font-size: 3rem;
   margin-bottom: 20px;
   color: #484848;
 }
 
 .hero p {
-  /* font-family: "Merriweather", serif; */
   font-size: 1.2rem;
   color: #555;
   margin-bottom: 40px;
 }
 
-/* Hero Section Buttons Container */
 .hero-buttons {
   display: flex;
   justify-content: center;
-  gap: 20px; 
-  margin-top: 20px; 
+  gap: 20px;
+  margin-top: 20px;
 }
 
-/* Base Button Style */
 .hero-button {
-  background-color: #343434; 
-  color: white; /* White text */
+  background-color: #343434;
+  color: white;
   padding: 10px 35px;
-  font-family: "Lato", sans-serif; /* Use Lato for buttons */
+  font-family: "Lato", sans-serif;
   font-size: 1.0rem;
   border: none;
-  border-radius: 50px; /* Rounded edges like a cylinder */
+  border-radius: 50px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px; /* Space between text and icon */
+  gap: 10px;
   transition: background-color 0.3s, transform 0.3s;
 }
 
-/* Hover Effect for Buttons */
 .hero-button:hover {
-  transform: scale(1.1); /* Slight zoom effect */
+  transform: scale(1.1);
 }
 
-.get-started{
+.get-started {
   padding-right: 15px;
   padding-left: 25px;
 }
 
-/* Book a Call Button Specific Styles */
 .book-call-button {
-  background-color: #343434; /* Green background */
+  background-color: #343434;
   padding-right: 15px;
   padding-left: 25px;
 }
 
-/* Icon Styles */
 .icon-arrow {
   font-size: 1.1rem;
-  border-radius: 50%; /* Circle shape */
+  border-radius: 50%;
   background-color: #f3f0f0;
   color: #000;
   width: 30px;
@@ -158,7 +150,7 @@ body {
 
 .icon-calendar {
   font-size: 1.0rem;
-  border-radius: 50%; /* Circle shape */
+  border-radius: 50%;
   background-color: #f3f0f0;
   color: #000;
   width: 30px;
@@ -184,18 +176,18 @@ body {
 
 .feature-cards {
   display: flex;
-  justify-content: center; 
-  gap: 50px; 
-  flex-wrap: wrap; 
+  justify-content: center;
+  gap: 50px;
+  flex-wrap: wrap;
 }
 
 .feature-cards .card {
-  background: #efefef; /* Light gray background for soft effect */
+  background: #efefef;
   padding: 25px;
   border-radius: 20px;
   width: 20%;
   box-shadow: 8px 8px 16px rgba(2, 57, 239, 0.1), 
-              -8px -8px 16px rgba(198, 247, 255, 0.413); /* Soft inset shadows */
+              -8px -8px 16px rgba(198, 247, 255, 0.413);
   text-align: left;
   transition: all 0.3s ease-in-out;
 }
@@ -223,33 +215,30 @@ body {
   margin-bottom: 40px;
 }
 
-/* Common styles for all points */
 .point {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: 1000px;
-  margin: 0 auto 60px; /* Add spacing between points */
+  margin: 0 auto 60px;
   padding: 2px;
-  position: relative; /* For the horizontal line */
+  position: relative;
 }
 
-/* Horizontal line between points */
 .point:not(:last-child)::after {
   content: '';
   position: absolute;
-  bottom: -30px; /* Position the line below the point */
+  bottom: -30px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80%; /* Adjust the width of the line */
+  width: 80%;
   height: 1px;
-  background-color: #ccc; /* Line color */
+  background-color: #ccc;
 }
 
-/* Point content (heading and description) */
 .point-content {
   flex: 1;
-  max-width: 60%; /* Limit width for better readability */
+  max-width: 60%;
 }
 
 .point-content h3 {
@@ -262,24 +251,22 @@ body {
   color: #666;
 }
 
-/* Huge number styling */
 .point-number {
   font-family: "Rammetto One", sans-serif;
-  font-size: 9rem; /* Huge number */
-  /* font-weight: bold; */
-  color: #dfdfdf; /* Light gray color for subtlety */
-  z-index: -1; /* Push it behind the content */
-  user-select: none; /* Prevent text selection */
+  font-size: 9rem;
+  color: #dfdfdf;
+  z-index: -1;
+  user-select: none;
 }
 
-/* Alternating layout for odd and even points */
 .point:nth-child(odd) {
-  flex-direction: row; 
+  flex-direction: row;
 }
 
 .point:nth-child(even) {
-  flex-direction: row-reverse; 
+  flex-direction: row-reverse;
 }
+
 /* FAQ Section */
 .faq {
   padding-top: 20px;
@@ -301,7 +288,7 @@ body {
 }
 
 .faq-item {
-  border-bottom: 1px solid #e0e0e0; /* Light gray border */
+  border-bottom: 1px solid #e0e0e0;
   margin-bottom: 10px;
 }
 
@@ -322,7 +309,7 @@ body {
 }
 
 .faq-question:hover {
-  background-color: #f8f9fa; /* Light gray background on hover */
+  background-color: #f8f9fa;
 }
 
 .faq-icon {
@@ -344,29 +331,27 @@ body {
   margin: 10px 0;
 }
 
-/* Active FAQ Item */
 .faq-item.active .faq-question {
-  background-color: #f8f9fa; /* Light gray background for active question */
+  background-color: #f8f9fa;
 }
 
 .faq-item.active .faq-icon {
-  transform: rotate(45deg); /* Rotate the "+" icon to "x" */
+  transform: rotate(45deg);
 }
 
 .faq-item.active .faq-answer {
-  max-height: 200px; /* Adjust based on content */
+  max-height: 200px;
   padding: 10px 20px 20px;
 }
 
 /* Footer */
 .footer {
-  background-color: #000; /* Black background */
-  color: #fff; /* White text */
+  background-color: #000;
+  color: #fff;
   padding: 40px 5%;
-  margin-top: 50px; /* Space above the footer */
+  margin-top: 50px;
 }
 
-/* Footer Content */
 .footer-content {
   display: flex;
   justify-content: space-around;
@@ -389,7 +374,7 @@ body {
 .footer-section p,
 .footer-section ul {
   font-size: 1rem;
-  color: #ccc; /* Light gray text */
+  color: #ccc;
 }
 
 .footer-section ul {
@@ -402,53 +387,51 @@ body {
 }
 
 .footer-section ul li a {
-  color: #ccc; /* Light gray text */
+  color: #ccc;
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .footer-section ul li a:hover {
-  color: #007bff; /* Blue on hover */
+  color: #007bff;
 }
 
-/* Social Links */
 .social-links {
   display: flex;
   gap: 15px;
 }
 
 .social-links a img {
-  width: 24px; /* Adjust icon size */
+  width: 24px;
   height: 24px;
   transition: opacity 0.3s;
 }
 
 .social-links a:hover img {
-  opacity: 0.7; /* Slight fade on hover */
+  opacity: 0.7;
 }
 
 .footer-section.about-us {
-  flex: 1; 
-  min-width: 350px; /* Adjust minimum width */
+  flex: 1;
+  min-width: 350px;
 }
 
 .footer-logo {
-  width: 200px; /* Adjust size as needed */
-  margin-bottom: 15px; /* Space below logo */
+  width: 200px;
+  margin-bottom: 15px;
 }
 
-/* Footer Bottom */
 .footer-bottom {
   text-align: center;
   padding: 20px;
-  border-top: 1px solid #333; /* Dark gray border */
+  border-top: 1px solid #333;
   margin-top: 40px;
 }
 
 .footer-bottom p {
   margin: 0;
   font-size: 0.9rem;
-  color: #ccc; /* Light gray text */
+  color: #ccc;
 }
 
 /* Glass Morphism Effect for Modal */
@@ -458,14 +441,14 @@ body {
   left: 50%;
   background-color: #ffffffda;
   transform: translate(-50%, -50%);
-  background: rgba(252, 252, 252, 0.619); /* Semi-transparent background */
-  backdrop-filter: blur(30px); /* Blur effect for glass morphism */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
-  border-radius: 35px; /* Rounded corners */
+  background: rgba(252, 252, 252, 0.619);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 35px;
   padding: 30px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.397); /* Soft shadow */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.397);
   z-index: 1001;
 }
 
@@ -475,9 +458,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.311); 
-  backdrop-filter: blur(5px); 
-  z-index: 1000; 
+  background-color: rgba(0, 0, 0, 0.311);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
 }
 
 .modal h2 {
@@ -504,11 +487,11 @@ body {
 }
 
 .modal input::placeholder {
-  color: rgba(51, 51, 51, 0.7); /* Placeholder text color */
+  color: rgba(51, 51, 51, 0.7);
 }
 
 .modal input:focus {
-  border-color: #007bff; /* Highlight border on focus */
+  border-color: #007bff;
 }
 
 .modal button[type="submit"] {
@@ -516,14 +499,14 @@ body {
   color: white;
   padding: 10px;
   border: none;
-  border-radius: 20px; /* Updated border-radius */
+  border-radius: 20px;
   font-size: 16px;
   cursor: pointer;
   transition: transform 0.3s;
 }
 
 .modal button[type="submit"]:hover {
-  transform: scale(1.03); 
+  transform: scale(1.03);
 }
 
 .modal button[type="button"] {
@@ -540,7 +523,6 @@ body {
   text-decoration: underline;
 }
 
-/* Google Login Button */
 .google-login {
   text-align: center;
   margin-top: 20px;
@@ -549,7 +531,7 @@ body {
 .google-button {
   display: inline-flex;
   align-items: center;
-  background-color: #282828; /* Google Blue */
+  background-color: #282828;
   color: white;
   padding: 10px 20px;
   border-radius: 20px;
@@ -558,7 +540,7 @@ body {
 }
 
 .google-button:hover {
-  transform: scale(1.1); 
+  transform: scale(1.1);
 }
 
 .google-button img {
@@ -573,11 +555,12 @@ body {
   margin-top: 10px;
   text-align: center;
 }
+
 /* Navbar Buttons */
 .signup-button {
   background-color: #222223;
   color: rgb(255, 255, 255);
-  font-family: "Lato", sans-serif; /* Use Lato for buttons */
+  font-family: "Lato", sans-serif;
   padding: 10px 20px;
   border-radius: 25px;
   border: none;
@@ -587,10 +570,9 @@ body {
 }
 
 .signup-button:hover {
-  transform: scale(1.1); 
+  transform: scale(1.1);
 }
 
-/* User logo button */
 .profile-button {
   background: none;
   border: none;
@@ -599,17 +581,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px; 
-  margin-right: 10px;
+  gap: 4px;
   margin-right: 10px;
   position: relative;
 }
 
 .user-icon {
-  width: 18px; /* Adjust size as needed */
+  width: 18px;
   height: 18px;
-  color: #333; /* Adjust color as needed */
-  transition: color 0.3s ease; /* Smooth color transition */
+  color: #333;
+  transition: color 0.3s ease;
 }
 
 .profile-button span {
@@ -619,12 +600,11 @@ body {
   opacity: 0;
   transition: opacity 0.3s ease, visibility 0.3s ease;
   position: absolute;
-  top: 24px; /* Position text below icon */
+  top: 24px;
 }
 
-/* Hover effect */
 .profile-button:hover .user-icon {
-  color: #007bff; /* Change icon color on hover */
+  color: #007bff;
 }
 
 .profile-button:hover span {
@@ -632,7 +612,6 @@ body {
   opacity: 1;
 }
 
-/* Logout button */
 .logout-button {
   background: none;
   border: none;
@@ -659,9 +638,8 @@ body {
   transform: translateX(-50%);
 }
 
-/* Hover effect */
 .logout-button:hover .logout-icon {
-  color: #007bff; /* Change icon color on hover */
+  color: #007bff;
 }
 
 .logout-button:hover span {
@@ -669,7 +647,6 @@ body {
   opacity: 1;
 }
 
-/* Back to Top Button */
 .back-to-top {
   position: fixed;
   bottom: 20px;
@@ -691,4 +668,157 @@ body {
 
 .back-to-top:hover {
   background-color: #5c5c5c;
+}
+
+@media (max-width: 768px) {
+  /* Tablet Styles */
+  .navbar-logo {
+    margin-left: 5%;
+  }
+
+  .nav-links-container {
+    padding: 8px 15px; /* Reduced padding for smaller screens */
+  }
+
+  .nav-link {
+    margin: 0 10px; /* Reduced margin between links */
+    font-size: 0.9rem; /* Reduced font size for navbar links */
+  }
+
+  /* Adjust profile and logout icons for tablets */
+  .profile-button .user-icon {
+    width: 16px; /* Reduced icon size */
+    height: 16px;
+  }
+
+  .logout-button .logout-icon {
+    width: 16px; /* Reduced icon size */
+    height: 16px;
+  }
+
+  .profile-button,
+  .logout-button {
+    padding: 5px; /* Reduced padding for buttons */
+  }
+
+  .hero {
+    height: 60vh;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 0.9rem;
+  }
+
+  .hero-buttons {
+    flex-direction: row; /* Keep buttons in a row */
+    gap: 10px;
+  }
+
+  .hero-button {
+    padding: 10px 20px; /* Adjusted padding for smaller screens */
+    font-size: 0.9rem;
+    white-space: nowrap; /* Prevent text from wrapping */
+  }
+
+  .feature-cards .card {
+    width: 45%; /* Adjust card width for tablets */
+  }
+
+  .point {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .point-content {
+    max-width: 100%;
+  }
+
+  .point-number {
+    font-size: 6rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-section {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Mobile Styles */
+  .navbar-logo {
+    height: 30px;
+    margin-left: 2%;
+  }
+
+  .nav-links-container {
+    padding: 6px 10px; /* Further reduced padding for mobile */
+  }
+
+  .nav-link {
+    margin: 0 8px; /* Further reduced margin between links */
+    font-size: 0.8rem; /* Further reduced font size for navbar links */
+  }
+
+  /* Adjust profile and logout icons for mobile */
+  .profile-button .user-icon {
+    width: 12px; /* Further reduced icon size */
+    height: 12px;
+  }
+
+  .logout-button .logout-icon {
+    width: 12px; /* Further reduced icon size */
+    height: 12px;
+  }
+
+  .profile-button,
+  .logout-button {
+    padding: 5px; /* Add some padding for better spacing */
+    margin-right: 5px; /* Add margin to separate buttons */
+  }
+
+  .signup-button {
+    width: 60px;
+    padding: 5px; /* Adjusted padding for better spacing */
+    margin-right: 5px; /* Add margin to separate buttons */
+  }
+
+  .hero {
+    height: 50vh;
+    background-size: 700px;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero p {
+    font-size: 0.8rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column; /* Stack buttons vertically on mobile */
+    gap: 10px;
+  }
+
+  .hero-button {
+    width: auto; /* Let buttons adjust to text width */
+    padding: 10px 20px; /* Adjusted padding for mobile */
+    font-size: 0.9rem;
+  }
+
+  .feature-cards .card {
+    width: 100%; /* Full width cards on mobile */
+  }
+
+  .footer-section {
+    min-width: 100%;
+  }
 }

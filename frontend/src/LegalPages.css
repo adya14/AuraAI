@@ -1,0 +1,104 @@
+/* General Styling */
+.legal-page {
+    font-family: "Lato", sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 50px 10%;
+    line-height: 1.6;
+  }
+  
+  .legal-page .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Headings */
+  .legal-page h1 {
+    font-family: "Merriweather", serif;
+    font-size: 2.2rem;
+    text-align: center;
+    color: #3b3b3b;
+    margin-bottom: 20px;
+  }
+  
+  .legal-page h2 {
+    font-size: 1.8rem;
+    margin-top: 30px;
+    color: #1c1c1c;
+    border-bottom: 2px solid #969696;
+    padding-bottom: 8px;
+  }
+  
+  .legal-page h3 {
+    font-size: 1.4rem;
+    margin-top: 20px;
+    color: #34495e;
+  }
+  
+  /* Paragraphs & Lists */
+  .legal-page p {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  
+  .legal-page ul {
+    margin-left: 20px;
+    padding-left: 15px;
+  }
+  
+  .legal-page ul li {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    list-style-type: disc;
+  }
+  
+  /* Horizontal Divider */
+  .legal-page hr {
+    border: none;
+    height: 1px;
+    background: #ddd;
+    margin: 30px 0;
+  }
+  
+  /* Contact Section */
+  .legal-page .contact-info {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  
+  .legal-page .contact-info p {
+    margin: 5px 0;
+  }
+  
+  /* Mobile Responsiveness */
+  @media (max-width: 768px) {
+    .legal-page {
+      padding: 30px 5%;
+    }
+  
+    .legal-page .container {
+      padding: 25px;
+    }
+  
+    .legal-page h1 {
+      font-size: 2rem;
+    }
+  
+    .legal-page h2 {
+      font-size: 1.6rem;
+    }
+  
+    .legal-page h3 {
+      font-size: 1.3rem;
+    }
+  
+    .legal-page p,
+    .legal-page ul li {
+      font-size: 1rem;
+    }
+  }
+  
