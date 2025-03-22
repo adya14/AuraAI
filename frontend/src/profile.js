@@ -33,7 +33,7 @@ const Profile = ({ onClose }) => {
           return;
         }
 
-        const response = await axios.get(`${process.env.BACKEND_URL}/api/profile`, {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -82,7 +82,7 @@ const Profile = ({ onClose }) => {
         ...(newPassword && { newPassword, verificationCode }), // Include new password and verification code if newPassword is entered
       };
   
-      const response = await axios.put(`${process.env.BACKEND_URL}/api/profile`, updatedData, {
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/profile`, updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -101,7 +101,7 @@ const Profile = ({ onClose }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await axios.delete(`${process.env.BACKEND_URL}/api/profile`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -119,7 +119,7 @@ const Profile = ({ onClose }) => {
       if (!token) return;
 
       const response = await axios.post(
-        `${process.env.BACKEND_URL}/api/send-verification-code`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/send-verification-code`,
         { currentPassword }, // Include current password
         {
           headers: { Authorization: `Bearer ${token}` },

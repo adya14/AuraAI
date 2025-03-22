@@ -22,7 +22,7 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/send-email`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

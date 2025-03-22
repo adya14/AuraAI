@@ -74,7 +74,7 @@ const Scheduler = () => {
       };
 
       // Make a POST request to the /make-call API
-      const response = await axios.post(`${process.env.BACKEND_URL}/make-call`, data);
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/make-call`, data);
 
       console.log("Calls scheduled with the following details:");
       console.log("Job Role:", jobRole);

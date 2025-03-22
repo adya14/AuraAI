@@ -52,7 +52,7 @@ const Pricing = () => {
 
     try {
       // Create a payment order on the backend
-      const response = await axios.post(`${process.env.BACKEND_URL}/api/create-order`, {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/create-order`, {
         plan: planName,
         amount: price,
       });
