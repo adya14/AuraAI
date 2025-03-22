@@ -12,10 +12,14 @@ require('dotenv').config();
 const { transcribeAudio, getAiResponse } = require('./interview');
 const app = express();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN); // Initialize Twilio client
+const allowedOrigins = [
+  "http://localhost:3000", 
+  "https://moon-ai-one.vercel.app" 
+];
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
