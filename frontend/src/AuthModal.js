@@ -257,7 +257,7 @@ const AuthModal = ({ isOpen, onRequestClose, onAuthSuccess }) => {
           {/* Google Login Button */}
           <div className="google-login">
             <p>Or {isLogin ? 'login' : 'sign up'} with:</p>
-            <a href={`${process.env.REACT_APP_BACKEND_URL}/auth/google`} className="google-button">
+            <a href={`${process.env.BACKEND_URL}/auth/google`} className="google-button">
               <img src={googleicon} alt="Google Icon" />
               <span>Google</span>
             </a>
