@@ -283,9 +283,7 @@ app.get("/user-plan", async (req, res) => {
 app.options('*', cors());
 
 // Catch-all route to serve the frontend
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-// });
+
 
 // Start the server
 const PORT = process.env.PORT || 5000;
