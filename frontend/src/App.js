@@ -460,13 +460,13 @@ function App() {
           <div className="footer-section">
             <h3>Follow Us</h3>
             <div className="social-links">
-              <a href="https://facebook.com/moonai" target="_blank" rel="noopener noreferrer">
+              <a href="-" target="_blank" rel="noopener noreferrer">
                 <img src={facebookIcon} alt="Facebook" />
               </a>
-              <a href="https://linkedin.com/company/moonai" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.linkedin.com/company/moon-voice-ai/about/?viewAsMember=true" target="_blank" rel="noopener noreferrer">
                 <img src={linkedinIcon} alt="LinkedIn" />
               </a>
-              <a href="https://instagram.com/moonai" target="_blank" rel="noopener noreferrer">
+              <a href="-" target="_blank" rel="noopener noreferrer">
                 <img src={instagramIcon} alt="Instagram" />
               </a>
             </div>
