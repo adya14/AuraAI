@@ -11,12 +11,12 @@ const Profile = ({ onClose }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [isEditing, setIsEditing] = useState(false); // State to toggle editing mode
   const [name, setName] = useState(''); // Combined name field
-  const [email, setEmail] = useState(''); // Add email state
+  const [email, setEmail] = useState(''); 
   const [currentPassword, setCurrentPassword] = useState(''); // Current password field
   const [newPassword, setNewPassword] = useState(''); // New password field
   const [verificationCode, setVerificationCode] = useState(''); // Verification code field
   const [showVerificationPopup, setShowVerificationPopup] = useState(false); // Show/hide verification code popup
-  const [error, setError] = useState(''); // Error message state
+  const [error, setError] = useState(''); 
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -33,7 +33,7 @@ const Profile = ({ onClose }) => {
           return;
         }
 
-        const response = await axios.get('moonai-production.up.railway.app/api/profile', {
+        const response = await axios.get(`${process.env.BACKEND_URL}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -82,7 +82,7 @@ const Profile = ({ onClose }) => {
         ...(newPassword && { newPassword, verificationCode }), // Include new password and verification code if newPassword is entered
       };
   
-      const response = await axios.put('moonai-production.up.railway.app/api/profile', updatedData, {
+      const response = await axios.put(`${process.env.BACKEND_URL}/api/profile`, updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -101,7 +101,7 @@ const Profile = ({ onClose }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await axios.delete('moonai-production.up.railway.app/api/profile', {
+      await axios.delete(`${process.env.BACKEND_URL}/api/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -119,7 +119,7 @@ const Profile = ({ onClose }) => {
       if (!token) return;
 
       const response = await axios.post(
-        'moonai-production.up.railway.app/api/send-verification-code',
+        `${process.env.BACKEND_URL}/api/send-verification-code`,
         { currentPassword }, // Include current password
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -25,7 +25,7 @@ const Caller = () => {
           return;
         }
 
-        const response = await axios.get("moonai-production.up.railway.app/user-plan", {
+        const response = await axios.get(`${process.env.BACKEND_URL}/user-plan`, {
           params: { email },
         });
 
@@ -48,7 +48,7 @@ const Caller = () => {
           return;
         }
 
-        const response = await axios.get("moonai-production.up.railway.app/scheduled-calls", {
+        const response = await axios.get(`${process.env.BACKEND_URL}/scheduled-calls`, {
           params: { email },
         });
         setScheduledCalls(response.data);

@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "proxy": "moonai-production.up.railway.app",
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@fortawesome/fontawesome-free": "^6.7.2",
@@ -15,6 +15,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.1",
     "bootstrap": "^5.3.3",
+    "dotenv": "^16.4.7",
     "framer-motion": "^12.4.10",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",

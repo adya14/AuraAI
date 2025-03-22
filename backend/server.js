@@ -117,7 +117,6 @@ app.post("/make-call", async (req, res) => {
             <Response>
               <Say>Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?</Say>
               <Gather input="speech" action="${process.env.NGROK_URL}/process-response" timeout="10">
-                <Say>Hi, I am moon, your AI interviewer. Let's begin. Please introduce yourself.</Say>
               </Gather>
             </Response>
           `,
