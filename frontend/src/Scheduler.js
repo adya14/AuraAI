@@ -100,6 +100,13 @@ const Scheduler = () => {
 
   return (
     <div className="scheduler">
+      {/* Overlay Div */}
+      <div className="overlay">
+        <div className="overlay-content">
+          <h2>We Will Launch Soon</h2>
+          <p>Stay tuned for the exciting launch of our scheduler feature!</p>
+        </div>
+      </div>
       <h2> Let's Automate That Phone Interview for You.</h2>
       <p className="tagline">
         Say goodbye to manual scheduling and hello to AI-powered interviews. Let’s make hiring smarter, faster, and cooler
