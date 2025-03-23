@@ -71,16 +71,16 @@ router.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', { session: false }, (err, user, info) => {
     if (err) {
       console.error("Google OAuth Callback Error:", err);
-      return res.redirect(`http://localhost:3000?error=Server error`);
+      return res.redirect(`https://moon-ai-one.vercel.app?error=Server error`);
     }
 
     if (!user) {
       console.error("Google OAuth Failed:", info?.message || "Unknown reason");
-      return res.redirect(`http://localhost:3000?error=${encodeURIComponent(info?.message || "Authentication failed")}`);
+      return res.redirect(`https://moon-ai-one.vercel.app?error=${encodeURIComponent(info?.message || "Authentication failed")}`);
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.redirect(`http://localhost:3000?token=${token}`);
+    res.redirect(`https://moon-ai-one.vercel.app?token=${token}`);
   })(req, res, next);
 });
 
