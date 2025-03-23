@@ -52,25 +52,27 @@ const transporter = nodemailer.createTransport({
 });
 
 // Route to handle contact form submissions
-app.post('/send-email', (req, res) => {
+app.post("/send-email", async (req, res) => {
+  console.log("🔹 Received a request to /send-email"); // ✅ Debug log
+
   const { name, email, message } = req.body;
+  console.log(`🔹 Form Data: Name=${name}, Email=${email}, Message=${message}`); // ✅ Log form data
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'moon.voice.ai@gmail.com',
-    subject: 'New Message from moonAI Contact Form',
+    to: "your-email@gmail.com",  // ✅ Change this to your actual email
+    subject: "New Contact Form Submission",
     text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error);
-      res.status(500).json({ success: false, message: 'Failed to send email.' });
-    } else {
-      console.log('Email sent:', info.response);
-      res.status(200).json({ success: true, message: 'Email sent successfully!' });
-    }
-  });
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.response); // ✅ Log success
+    res.status(200).json({ success: true, message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("🚨 Error sending email:", error.message); // 🚨 Log actual error
+    res.status(500).json({ success: false, message: "Failed to send email." });
+  }
 });
 
 // Track interview state (in-memory storage; replace with a database in production)

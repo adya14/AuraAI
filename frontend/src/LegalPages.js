@@ -151,6 +151,7 @@ const LegalPages = () => {
         <p>If you have any questions regarding our refund policy, please contact us:</p>
         <p>Email: <a href="mailto:moon.voice.ai@gmail.com">moon.voice.ai@gmail.com</a></p>
         <p>Phone: +91 8851619182</p>
+        <p>Adress: Block O, Type V(B), Sector 10, Nivedita Kunj, RK Puram Delhi India, 110022</p>
       </div>
     </div>
   );

@@ -41,10 +41,10 @@ body {
     border-radius: 18px;
     border: none;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s;
     font-size: 15px;
   }
   
   .contact-form button:hover {
-    background-color: #1a1a1a;
+    transform: scale(1.1);
   }

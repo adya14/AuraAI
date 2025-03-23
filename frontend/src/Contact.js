@@ -22,7 +22,7 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/send-email`, {
+      const response = await fetch("https://moonai-production.up.railway.app/send-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,13 +31,13 @@ const Contact = () => {
       });
 
       if (response.ok) {
-        setStatusMessage("Message sent successfully!"); // Set success message
+        setStatusMessage("Message sent successfully! Thank you for reaching out. We will get back to you soon"); // Set success message
       } else {
-        setStatusMessage("Failed to send message. Please try again."); // Set error message
+        setStatusMessage("Failed to send message. Please try again."); 
       }
     } catch (error) {
       console.error("Error:", error);
-      setStatusMessage("An error occurred. Please try again."); // Set error message
+      setStatusMessage("An error occurred. Please try again."); 
     }
 
     // Clear the form

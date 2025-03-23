@@ -100,7 +100,7 @@ const Scheduler = () => {
 
   return (
     <div className="scheduler">
-      {/* Overlay Div */}
+      {/* ----------Overlay Div--------- */}
       <div className="overlay">
         <div className="overlay-content">
           <h2>We Will Launch Soon</h2>
