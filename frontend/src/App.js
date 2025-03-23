@@ -454,6 +454,7 @@ function App() {
             <ul>
               <li>Email: moon.voice.ai@gmail.com</li>
               <li>Phone: +91 88516 19182</li>
+              <li>Adress: Block O, Type V(B), Sector 10, Nivedita Kunj, RK Puram Delhi India, 110022</li>
             </ul>
             </div>
           </div>
