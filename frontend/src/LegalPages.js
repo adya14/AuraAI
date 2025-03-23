@@ -6,7 +6,7 @@ const LegalPages = () => {
     <div className="legal-page">
       <div className="container">
         
-        <h1>Privacy and Terms</h1>
+        <h1>Privacy Policy</h1>
         <p><strong>Last updated: March 20, 2025</strong></p>
 
         <p>
