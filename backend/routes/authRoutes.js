@@ -80,7 +80,7 @@ router.get('/auth/google/callback', (req, res, next) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.redirect(`https://moon-ai-one.vercel.app?token=${token}`);
+    res.redirect(`https://moon-ai-one.vercel.app/?token=${token}`);
   })(req, res, next);
 });
 
