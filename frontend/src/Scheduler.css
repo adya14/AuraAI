@@ -140,7 +140,21 @@
   background-color: rgba(255, 255, 255, 0.8); /* Light background for the circle */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
 }
+.call-limit-alert {
+  background-color: #fff8e6;
+  color: #d32f2f;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid #d32f2f;
+}
 
+.call-limit-alert i {
+  font-size: 18px;
+}
 
 /* -------------Overlay Styles-------------- */
 .overlay {
@@ -160,7 +174,7 @@
 .overlay-content {
   text-align: center;
   color: rgb(68, 68, 68);
-  background: rgba(255, 255, 255, 0.285); /* Semi-transparent white background */
+  background: rgb(255, 255, 255); /* Semi-transparent white background */
   padding: 2rem;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);

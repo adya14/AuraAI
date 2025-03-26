@@ -284,22 +284,191 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Razorpay webhook
+router.post('/payment-webhook', async (req, res) => {
+  const crypto = require('crypto');
+  const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
+  shasum.update(JSON.stringify(req.body));
+  const digest = shasum.digest('hex');
+
+  if (digest !== req.headers['x-razorpay-signature']) {
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  const { payload } = req.body;
+  if (payload.payment.entity.status === 'captured') {
+    try {
+      const email = payload.payment.entity.email;
+      const plan = payload.payment.entity.notes.plan; // From order metadata
+      
+      await User.findOneAndUpdate(
+        { email },
+        { 
+          $set: { 
+            plan,
+            totalCalls: plan === 'Basic Plan' ? 100 : 
+                      plan === 'Pro Plan' ? 250 : 
+                      plan === 'Quantum Flex Plan' ? 10000 : 0,
+            usedCalls: 0 
+          } 
+        }
+      );
+      res.status(200).end();
+    } catch (err) {
+      console.error('Webhook error:', err);
+      res.status(500).end();
+    }
+  }
+});
+
+// Update user plan after successful payment
+// router.post('/api/update-plan', passport.authenticate('jwt', { session: false }), async (req, res) => {
+//   const { plan, totalCalls } = req.body;
+//   const userId = req.user._id;
+
+//   try {
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     // Update user's plan and total calls
+//     user.plan = plan;
+//     user.totalCalls = totalCalls;
+//     user.usedCalls = 0; // Reset used calls when a new plan is purchased
+//     await user.save();
+
+//     res.json({ message: 'Plan updated successfully', user });
+//   } catch (error) {
+//     console.error('Error updating plan:', error);
+//     res.status(500).json({ error: 'Failed to update plan' });
+//   }
+// });
+
+router.get("/user-plan", async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      activePlan: user.plan || null,
+      totalCalls: user.totalCalls || 0,
+      usedCalls: user.usedCalls || 0,
+      totalCallsTillDate: user.totalCallsTillDate || 0,
+    });
+  } catch (error) {
+    console.error("Error fetching user plan:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Create Order API
 router.post('/api/create-order', async (req, res) => {
   try {
     const { plan, amount } = req.body;
-
     const options = {
-      amount: amount * 100, // Amount in paise (₹1 = 100 paise)
+      amount: amount * 100,
       currency: 'INR',
-      receipt: `order_rcptid_${Math.random()}`,
-      payment_capture: 1,
+      receipt: `order_${Date.now()}`,
+      notes: { plan }, // Critical for webhook
+      payment_capture: 1
     };
-
     const order = await razorpay.orders.create(options);
     res.json({ orderId: order.id, amount, plan });
   } catch (error) {
-    res.status(500).json({ error: 'Error creating Razorpay order' });
+    res.status(500).json({ error: 'Error creating order' });
+  }
+});
+
+router.post('/verify-payment', async (req, res) => {
+  const crypto = require('crypto');
+  
+  try {
+    // 1. Validate required fields
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, plan, email } = req.body;
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !plan || !email) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Missing required payment verification fields' 
+      });
+    }
+
+    // 2. Verify payment signature
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid payment signature' 
+      });
+    }
+
+    // 3. Calculate call allocation based on plan
+    const callAllocation = {
+      'Basic Plan': 100,
+      'Pro Plan': 250,
+      'Quantum Flex Plan': 10000
+    };
+
+    // 4. Update user plan with transaction record
+    const updateResult = await User.findOneAndUpdate(
+      { email },
+      { 
+        $set: {
+          plan,
+          totalCalls: callAllocation[plan] || 0,
+          usedCalls: 0,
+          lastPayment: {
+            paymentId: razorpay_payment_id,
+            amount: req.body.amount || null,
+            date: new Date()
+          }
+        },
+        $push: {
+          paymentHistory: {
+            paymentId: razorpay_payment_id,
+            plan,
+            date: new Date(),
+            amount: req.body.amount || null
+          }
+        }
+      },
+      { new: true, upsert: false }
+    );
+
+    if (!updateResult) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+
+    // 5. Log successful verification
+    console.log(`Payment verified for ${email}. Plan: ${plan}, Payment ID: ${razorpay_payment_id}`);
+
+    // 6. Return success response with plan details
+    res.json({
+      success: true,
+      plan,
+      totalCalls: callAllocation[plan] || 0,
+      paymentId: razorpay_payment_id,
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    });
+
+  } catch (err) {
+    console.error('Payment verification error:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Payment verification failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : null
+    });
   }
 });
 

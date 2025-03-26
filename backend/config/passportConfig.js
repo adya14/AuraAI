@@ -23,8 +23,7 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'https://moonai-production.up.railway.app/auth/google/callback',
-  // callbackURL: 'https://moon-ai-one.vercel.app/auth/google/callback',
+  callbackURL: 'http://localhost:5000/auth/google/callback',
   passReqToCallback: true, 
 }, async (req, accessToken, refreshToken, profile, done) => {
   try {

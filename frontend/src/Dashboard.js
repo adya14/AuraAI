@@ -1,20 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faArrowRight, faSearch } from '@fortawesome/free-solid-svg-icons'; // Removed faTrash
-import axios from "axios"; 
+import { faPhone, faArrowRight, faSearch, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import axios from "axios";
 import "./Dashboard.css";
 
 const Caller = () => {
   const navigate = useNavigate();
-  const [scheduledCalls, setScheduledCalls] = useState([]); // State to store all calls
-  const [searchQuery, setSearchQuery] = useState(""); // State to store search query
+  const [scheduledCalls, setScheduledCalls] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [clickPosition, setClickPosition] = useState({ top: 0, left: 0 });
   const [userPlan, setUserPlan] = useState({
-    activePlan: null, // User's active plan
-    totalCalls: 0,    // Total calls included in the plan
-    usedCalls: 0,     // Calls made so far
+    activePlan: null,
+    totalCalls: 0,
+    usedCalls: 0,
+    totalCallsTillDate: 0,
   });
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const openScoreDetailsModal = (candidate, event) => {
+    setSelectedCandidate(candidate);
 
+    // Get exact cursor position
+    const clickX = event.clientX;
+    const clickY = event.clientY;
+
+    setClickPosition({
+      top: clickY,
+      left: clickX
+    });
+  };
+
+  const closeScoreDetailsModal = () => {
+    setSelectedCandidate(null);
+  };
   // Fetch user's active plan and call usage on component mount
   useEffect(() => {
     const fetchUserPlan = async () => {
@@ -42,7 +60,7 @@ const Caller = () => {
   useEffect(() => {
     const fetchScheduledCalls = async () => {
       try {
-        const email = localStorage.getItem("email"); // Get the email from localStorage
+        const email = localStorage.getItem("email");
         if (!email) {
           console.error("Email not found. Please log in.");
           return;
@@ -74,11 +92,11 @@ const Caller = () => {
 
   // Helper function to format date and time
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString(); // Format: MM/DD/YYYY
+    return new Date(date).toLocaleDateString();
   };
 
   const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString(); // Format: HH:MM:SS AM/PM
+    return new Date(date).toLocaleTimeString();
   };
 
   return (
@@ -97,21 +115,25 @@ const Caller = () => {
       <div className="stats-container scroll-reveal">
         {/* Container 1: Current Active Plan */}
         <div className="stat-card">
-          <h3>Current Plan</h3>
+          <h3>Current plan</h3>
           <p>{userPlan.activePlan || "No active plan"}</p>
           {userPlan.activePlan && <p>{userPlan.totalCalls} calls included</p>}
         </div>
 
-        {/* Container 3: Total Calls Made */}
+        {/* Container 2: Total Calls Made */}
         <div className="stat-card">
-          <h3>Total Calls Made</h3>
+          <h3>Calls made in current plan</h3>
           <p>{userPlan.usedCalls}</p>
         </div>
 
-        {/* Container 4: Total Calls Remaining */}
+        {/* Container 3: Total Calls Remaining */}
         <div className="stat-card">
-          <h3>Total Calls Remaining</h3>
+          <h3>Total calls remaining</h3>
           <p>{userPlan.totalCalls - userPlan.usedCalls}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Total calls made till date</h3>
+          <p>{userPlan.totalCallsTillDate}</p>
         </div>
       </div>
 
@@ -172,8 +194,8 @@ const Caller = () => {
           <input
             type="text"
             placeholder="Search by candidate name..."
-            value={searchQuery} // Use the same searchQuery state
-            onChange={(e) => setSearchQuery(e.target.value)} // Update the searchQuery state
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
         </div>
@@ -201,7 +223,7 @@ const Caller = () => {
                   call.candidates.some((candidate) =>
                     candidate.name.toLowerCase().includes(searchQuery.toLowerCase())
                   )
-                ) // Filter history calls based on search query
+                )
                 .map((call) =>
                   call.candidates.map((candidate, index) => (
                     <tr key={`${call._id}-${index}`}>
@@ -210,13 +232,66 @@ const Caller = () => {
                       <td>{call.jobRole}</td>
                       <td>{formatDate(call.scheduledTime)}</td>
                       <td>{formatTime(call.scheduledTime)}</td>
-                      <td>{candidate.score || "N/A"}</td>
+                      <td>
+                        {candidate.score || "N/A"}
+                        <FontAwesomeIcon
+                          icon={faInfoCircle}
+                          className="score-info-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openScoreDetailsModal(candidate, e);
+                          }}
+                        />
+                      </td>
                     </tr>
                   ))
                 )
             )}
           </tbody>
         </table>
+
+        {/* Score Details Modal */}
+        {selectedCandidate && (
+          <div className="score-details-modal">
+            <div
+              className="modal-content"
+              style={{
+                position: "fixed",
+                top: `${clickPosition.top}px`,
+                left: `${clickPosition.left}px`,
+                transform: "translate(-120%, 100%)",
+                zIndex: 1001
+              }}
+            >
+              <button className="close-modal" onClick={closeScoreDetailsModal}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+              <h4>Interview Details for {selectedCandidate.name}</h4>
+              <div className="score-justification">
+                {selectedCandidate.score ? (
+                  <>
+                    <h4>AI Evaluation:</h4>
+                    <p>{selectedCandidate.scoreJustification || "No detailed evaluation available."}</p>
+                  </>
+                ) : (
+                  <p>Call was not picked by the candidate</p>
+                )}
+              </div>
+              {selectedCandidate.score && (
+                <div className="score-breakdown">
+                  <h4>Score Breakdown:</h4>
+                  <ul>
+                    {selectedCandidate.scoreBreakdown?.map((item, i) => (
+                      <li key={i}>
+                        <strong>{item.category}:</strong> {item.score}/10 - {item.comment}
+                      </li>
+                    )) || <li>No detailed breakdown available.</li>}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

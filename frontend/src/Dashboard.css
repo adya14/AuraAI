@@ -177,6 +177,9 @@
   color: #333;
 }
 
+.history-calls-container h4 {
+  font-family: "Merriweather", serif; 
+}
 /* Table for History Calls */
 .history-calls-table {
   width: 100%;
@@ -200,8 +203,69 @@
   background-color: #f1f1f1;
 }
 
+/* Score info icon */
+.score-info-icon {
+  margin-left: 8px;
+  color: #3399cc;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.score-info-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Score details modal */
+.score-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  overflow: auto;
+}
+
+.modal-content {
+  background-color: rgb(26, 26, 26);
+  padding: 25px;
+  border-radius: 0px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 400px; 
+  overflow-y: auto;
+  position: absolute;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.score-details-modal .close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.score-justification,
+.score-breakdown {
+  margin-bottom: 20px;
+}
+
+.score-breakdown ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.score-breakdown li {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
 /* Modal Styles */
-.modal-overlay {
+/* .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -250,7 +314,7 @@
 .modal-buttons button:last-child {
   background: #ccc;
   color: black;
-}
+} */
 
 .scroll-reveal {
   opacity: 0;

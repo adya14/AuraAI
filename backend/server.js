@@ -6,16 +6,22 @@ const passport = require('./config/passportConfig');
 const authRoutes = require('./routes/authRoutes');
 const cors = require('cors');
 const User = require("./models/user");
-const ScheduledCall = require("./models/ScheduledCall"); 
+const ScheduledCall = require("./models/ScheduledCall");
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { transcribeAudio, getAiResponse } = require('./interview');
 const app = express();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN); // Initialize Twilio client
 const allowedOrigins = [
-  "http://localhost:3000", 
-  "https://moon-ai-one.vercel.app" 
+  "http://localhost:3000",
+  "https://moon-ai-one.vercel.app"
 ];
+
+//conversation logger helper
+function logConversation(callSid, speaker, text) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [Call ${callSid}] [${speaker}]: ${text}`);
+}
 
 // Enable CORS for all routes
 app.use(cors({
@@ -30,6 +36,8 @@ connectDB();
 
 // Middleware to parse JSON requests
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -75,169 +83,226 @@ app.post("/send-email", async (req, res) => {
 // Track interview state (in-memory storage; replace with a database in production)
 const interviewState = new Map();
 
-// Route to schedule and make a Twilio call at the specified time
+// Route to schedule and make calls
 app.post("/make-call", async (req, res) => {
   const { jobRole, jobDescription, candidates, scheduledTime, email } = req.body;
 
   try {
-    console.log("Attempting to schedule a call...");
-
-    // Log the received data for debugging
-    console.log("Job Role:", jobRole);
-    console.log("Job Description:", jobDescription);
-    console.log("Candidates:", candidates);
-    console.log("Scheduled Time:", scheduledTime);
-    console.log("Email:", email); 
+    if (!jobRole || !jobDescription || !candidates || !scheduledTime || !email) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
     const now = new Date();
     const scheduledDate = new Date(scheduledTime);
 
-    // Validate the scheduled time
     if (scheduledDate <= now) {
-      throw new Error("Scheduled time must be in the future.");
+      return res.status(400).json({ error: "Scheduled time must be in the future" });
     }
 
-    // Save the scheduled call to the database
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.usedCalls + candidates.length > user.totalCalls) {
+      return res.status(403).json({
+        error: "Not enough remaining calls in your plan",
+        remaining: user.totalCalls - user.usedCalls,
+        required: candidates.length
+      });
+    }
+
+    user.usedCalls += candidates.length;
+    user.totalCallsTillDate += candidates.length;
+    await user.save();
+
     const scheduledCall = new ScheduledCall({
       jobRole,
       jobDescription,
       candidates,
       scheduledTime: scheduledDate,
-      email, // Link the call to the user
+      email,
     });
-
     await scheduledCall.save();
 
-    // Schedule the call using Twilio (your existing logic)
     const delay = scheduledDate.getTime() - now.getTime();
 
+    // In your /make-call endpoint, modify the call creation:
     setTimeout(async () => {
       try {
-        const call = await client.calls.create({
-          to: candidates[0].phone, // Use the first candidate's phone number
-          from: process.env.TWILIO_PHONE_NUMBER,
-          twiml: `
-            <Response>
-              <Say>Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?</Say>
-              <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="10">
-              </Gather>
-            </Response>
-          `,
-        });
+        for (const candidate of candidates) {
+          const initialPrompt = `Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?`;
 
-        if (!call.sid) {
-          throw new Error("Twilio call SID is undefined. Call creation may have failed.");
+          // Create call with initial TwiML
+          const call = await client.calls.create({
+            to: candidate.phone,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            twiml: `
+          <Response>
+            <Say>${initialPrompt}</Say>
+            <Pause length="2"/>
+            <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="10"/>
+          </Response>
+        `,
+          });
+
+          const callSid = call.sid;
+
+          // Set interview state immediately
+          interviewState.set(callSid, {
+            jobRole,
+            jobDescription,
+            conversationHistory: [{ role: "assistant", content: initialPrompt }],
+            isIntroductionDone: false,
+            inQnaPhase: false,
+            questionCount: 0
+          });
+
+          logConversation(callSid, 'AI', initialPrompt);
+          console.log(`Call initiated to ${candidate.phone}. SID: ${callSid}`);
         }
-
-        console.log(`Call initiated. Call SID: ${call.sid}`);
       } catch (error) {
-        console.error(`Error initiating call: ${error.message}`);
+        console.error(`Error initiating calls: ${error.message}`);
       }
     }, delay);
 
-    res.status(200).json({ message: "Call scheduled successfully", scheduledTime });
+    res.status(200).json({
+      success: true,
+      message: "Interview scheduled successfully",
+      scheduledTime: scheduledDate.toISOString(),
+      candidatesCount: candidates.length,
+      remainingCalls: user.totalCalls - user.usedCalls
+    });
   } catch (error) {
     console.error(`Error scheduling call: ${error.message}`);
-    res.status(500).json({ error: "Failed to schedule call", details: error.message });
+    res.status(500).json({
+      error: "Failed to schedule call",
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
   }
 });
 
-// Route to process user speech input
 app.post('/process-response', async (req, res) => {
   const { SpeechResult, CallSid } = req.body;
+  const callSid = req.body.CallSid || req.query.CallSid;
 
   try {
-    console.log("Request Body:", req.body); // Log the entire request body for debugging
-
-    if (!CallSid) {
-      throw new Error("Missing CallSid.");
+    if (!callSid) {
+      throw new Error("Missing CallSid in request");
     }
 
-    console.log(`Processing response for CallSid: ${CallSid}`);
-
-    // Get the interview state for this call
-    const state = interviewState.get(CallSid);
-
+    const state = interviewState.get(callSid);
     if (!state) {
-      throw new Error("Invalid CallSid.");
+      throw new Error(`No state found for CallSid: ${callSid}`);
     }
 
-    // Handle missing SpeechResult
-    if (!SpeechResult) {
-      console.log("No speech detected. Prompting the user to speak again.");
+    let userResponse = SpeechResult;
+    if (!userResponse) {
       const twiml = `
         <Response>
           <Say>I didn't hear anything. Please try again.</Say>
-          <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="5">
+          <Gather input="speech" action="${process.env.BACKEND_URL}/process-response?CallSid=${callSid}" timeout="5">
             <Say>..</Say>
           </Gather>
         </Response>
       `;
-      res.type('text/xml').send(twiml);
-      return;
+      return res.type('text/xml').send(twiml);
     }
 
-    // Add user input to conversation history
-    state.conversationHistory.push({ role: "user", content: SpeechResult });
+    state.conversationHistory.push({ role: "user", content: userResponse });
 
-    // Check if this is the first interaction
-    if (!state.isIntroductionDone) {
-      state.isIntroductionDone = true;
-      const aiResponse = "I'm your interviewer today. Let's start with your introduction.";
-    } else {
-      // Check if we need to transition to Q&A phase
-      if (state.questionCount >= 2 && !state.inQnaPhase) {
-        state.inQnaPhase = true;
-        const aiResponse = "Thank you for your time. Do you have any questions for me?";
-      } else if (state.inQnaPhase) {
-        // Generate final response and end the call
-        const aiResponse = await getAiResponse(
-          SpeechResult,
-          state.jobRole, // Use job role from state
-          state.jobDescription, // Use job description from state
-          true, // Request rating
+    let aiResponse;
+    let shouldEndCall = false;
+    let ratingData = null;
+
+    // Check if we need to transition to Q&A phase
+    if (state.questionCount >= 2 && !state.inQnaPhase) {
+      state.inQnaPhase = true;
+      aiResponse = "Thank you for your time. Do you have any questions for me?";
+    } 
+    // Handle Q&A phase
+    else if (state.inQnaPhase) {
+      // Check if user asked a question (simple detection)
+      const isQuestion = /^(do|can|what|when|where|why|how|who|is|are|will|would|could)/i.test(userResponse.trim());
+      
+      if (isQuestion) {
+        // Answer the question
+        aiResponse = await getAiResponse(
+          userResponse,
+          state.jobRole,
+          state.jobDescription,
+          false,
           state.conversationHistory
         );
-        const twiml = `
-          <Response>
-            <Say>${aiResponse}</Say>
-            <Hangup />
-          </Response>
-        `;
-        res.type('text/xml').send(twiml);
-        return;
+        aiResponse += " Thank you for your time. We'll get back to you soon.";
       } else {
-        // Generate the next question
-        const aiResponse = await getAiResponse(
-          SpeechResult,
-          state.jobRole, // Use job role from state
-          state.jobDescription, // Use job description from state
-          false, // Don't request rating
-          state.conversationHistory
-        );
-        state.questionCount += 1;
+        // No question asked
+        aiResponse = "Thank you for your time. We'll get back to you soon.";
       }
+
+      // Generate rating (not spoken to candidate)
+      const ratingResponse = await getAiResponse(
+        "Please provide rating for this candidate.",
+        state.jobRole,
+        state.jobDescription,
+        true,
+        state.conversationHistory
+      );
+
+      try {
+        ratingData = JSON.parse(ratingResponse);
+        console.log('Candidate Rating:', ratingData);
+        
+        // Save to database
+        await ScheduledCall.updateOne(
+          { 'candidates.phone': state.candidatePhone },
+          { $set: { 
+            'candidates.$.score': ratingData.score,
+            'candidates.$.scoreJustification': ratingData.justification,
+            'candidates.$.scoreBreakdown': ratingData.breakdown 
+          }}
+        );
+      } catch (e) {
+        console.error("Error parsing rating:", e);
+      }
+
+      shouldEndCall = true;
+    } 
+    // Normal interview flow
+    else {
+      aiResponse = await getAiResponse(
+        userResponse,
+        state.jobRole,
+        state.jobDescription,
+        false,
+        state.conversationHistory
+      );
+      state.questionCount += 1;
     }
 
-    // Add AI response to conversation history
     state.conversationHistory.push({ role: "assistant", content: aiResponse });
+    logConversation(callSid, 'AI', aiResponse);
 
-    // Build TwiML response
-    const twiml = `
-      <Response>
-        <Say>${aiResponse}</Say>
-        <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="5">
-          <Say>Please continue.</Say>
-        </Gather>
-      </Response>
-    `;
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say(aiResponse);
+    
+    if (shouldEndCall) {
+      twiml.hangup();
+    } else {
+      twiml.gather({
+        input: 'speech',
+        action: `${process.env.BACKEND_URL}/process-response?CallSid=${callSid}`,
+        timeout: 5
+      });
+    }
 
-    res.type('text/xml').send(twiml);
+    res.type('text/xml').send(twiml.toString());
   } catch (error) {
     console.error(`Error processing response: ${error.message}`);
     const twiml = `
       <Response>
-        <Say>Sorry, an error occurred.</Say>
+        <Say>Sorry, an error occurred. Ending the call.</Say>
+        <Hangup/>
       </Response>
     `;
     res.type('text/xml').send(twiml);
@@ -246,7 +311,7 @@ app.post('/process-response', async (req, res) => {
 
 // Fetch scheduled calls for the user
 app.get("/scheduled-calls", async (req, res) => {
-  const { email } = req.query; 
+  const { email } = req.query;
 
   try {
     const scheduledCalls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 }); // Fetch calls sorted by date
@@ -257,34 +322,8 @@ app.get("/scheduled-calls", async (req, res) => {
   }
 });
 
-app.get("/user-plan", async (req, res) => {
-  const { email } = req.query;
-
-  try {
-    // Fetch user's active plan and call usage from the database
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.json({
-      activePlan: user.activePlan || null,
-      totalCalls: user.totalCalls || 0,
-      usedCalls: user.usedCalls || 0,
-    });
-  } catch (error) {
-    console.error("Error fetching user plan:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 // Handle preflight requests for all routes
 app.options('*', cors());
-
-// Catch-all route to serve the frontend
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-// });
 
 // Start the server
 const PORT = process.env.PORT || 5000;

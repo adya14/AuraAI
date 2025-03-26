@@ -22,7 +22,7 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("https://moonai-production.up.railway.app/send-email", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

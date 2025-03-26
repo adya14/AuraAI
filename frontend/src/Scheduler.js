@@ -1,40 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Scheduler.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faMinus, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 
 const Scheduler = () => {
-  const [candidates, setCandidates] = useState([{ name: "", phone: "+91" }]); // Initialize phone with +91
+  const [candidates, setCandidates] = useState([{ name: "", phone: "+91" }]);
   const [jobRole, setJobRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [interviewDateTime, setInterviewDateTime] = useState("");
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [error, setError] = useState(""); // Track error messages
-  const [successMessage, setSuccessMessage] = useState(""); // Track success messages
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [remainingCalls, setRemainingCalls] = useState(0);
 
-  // Handle adding more candidate fields
+  // Fetch user's plan and remaining calls
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      try {
+        const email = localStorage.getItem("email");
+        if (!email) {
+          console.error("Email not found. Please log in.");
+          return;
+        }
+
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/user-plan`, {
+          params: { email },
+        });
+
+        const totalRemaining = response.data.totalCalls - response.data.usedCalls;
+        setRemainingCalls(totalRemaining > 0 ? totalRemaining : 0);
+      } catch (error) {
+        console.error("Error fetching user plan:", error);
+      }
+    };
+
+    fetchUserPlan();
+  }, []);
+
+  // Add candidate field
   const addCandidateField = () => {
-    setCandidates([...candidates, { name: "", phone: "+91" }]); // Initialize new phone with +91
+    setCandidates([...candidates, { name: "", phone: "+91" }]);
+    setError("");
   };
 
-  // Handle removing a candidate field
+  // Remove candidate field
   const removeCandidateField = (index) => {
-    const updatedCandidates = candidates.filter((_, i) => i !== index); // Remove the candidate at the specified index
+    const updatedCandidates = candidates.filter((_, i) => i !== index);
     setCandidates(updatedCandidates);
+    setError("");
   };
 
-  // Handle changes in candidate fields
+  // Handle candidate field changes
   const handleCandidateChange = (index, field, value) => {
     const updatedCandidates = [...candidates];
-
-    // Ensure the phone number starts with +91 and only allows digits after it
     if (field === "phone") {
-      if (!value.startsWith("+91")) {
-        value = "+91" + value.replace(/\D/g, ""); // Remove non-digits and prepend +91
-      } else {
-        value = "+91" + value.slice(3).replace(/\D/g, ""); // Ensure only digits after +91
-      }
+      value = "+91" + (value.startsWith("+91") ? value.slice(3) : value).replace(/\D/g, "");
     }
-
     updatedCandidates[index][field] = value;
     setCandidates(updatedCandidates);
   };
@@ -59,34 +81,33 @@ const Scheduler = () => {
       }
 
       const email = localStorage.getItem("email");
-
       if (!email) {
         throw new Error("User email not found. Please log in.");
       }
 
-      // Prepare data to send to the backend
+      // Prepare data
       const data = {
         jobRole,
         jobDescription,
-        candidates, // Send all candidates to the backend
+        candidates,
         scheduledTime: scheduledTime.toISOString(),
         email,
       };
 
-      // Make a POST request to the /make-call API
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/make-call`, data);
+      // Make API call
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/make-call`, data);
 
-      console.log("Calls scheduled with the following details:");
-      console.log("Job Role:", jobRole);
-      console.log("Job Description:", jobDescription);
-      console.log("Scheduled Time:", scheduledTime.toLocaleString());
-      console.log("API Response:", response.data);
+      // Refresh plan data
+      const planResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/user-plan`, {
+        params: { email },
+      });
+      
+      const newRemaining = planResponse.data.totalCalls - planResponse.data.usedCalls;
+      setRemainingCalls(newRemaining > 0 ? newRemaining : 0);
+      setSuccessMessage(`Interview scheduled successfully for ${scheduledTime.toLocaleString()}!`);
 
-      // Set success message
-      setSuccessMessage(`Calls scheduled successfully for ${scheduledTime.toLocaleString()}!`);
-
-      // Reset the form fields after successful scheduling
-      setCandidates([{ name: "", phone: "+91" }]); // Reset to one empty candidate field
+      // Reset form
+      setCandidates([{ name: "", phone: "+91" }]);
       setJobRole("");
       setJobDescription("");
       setInterviewDateTime("");
@@ -100,109 +121,110 @@ const Scheduler = () => {
 
   return (
     <div className="scheduler">
-      {/* ----------Overlay Div--------- */}
-      <div className="overlay">
-        <div className="overlay-content">
-          <h2>We Will Launch Soon</h2>
-          <p>Stay tuned for the exciting launch of our scheduler feature!</p>
-        </div>
-      </div>
-      <h2> Let's Automate That Phone Interview for You.</h2>
+      <h2>Let's Automate That Phone Interview for You.</h2>
       <p className="tagline">
-        Say goodbye to manual scheduling and hello to AI-powered interviews. Let’s make hiring smarter, faster, and cooler
-        than ever!
+        Say goodbye to manual scheduling and hello to AI-powered interviews.
       </p>
 
       <div className="form-container">
-        {/* Candidate Name and Phone Number Fields */}
+        {/* Candidate fields */}
         {candidates.map((candidate, index) => (
           <div key={index} className="candidate-group">
             <div className="form-group">
-              <label htmlFor={`candidateName-${index}`}>Candidate Name</label>
+              <label>Candidate Name</label>
               <input
                 type="text"
-                id={`candidateName-${index}`}
                 value={candidate.name}
                 onChange={(e) => handleCandidateChange(index, "name", e.target.value)}
-                placeholder="Enter the candidate's name"
+                placeholder="Enter candidate's name"
                 required
               />
             </div>
             <div className="form-group phone-group">
-              <label htmlFor={`candidatePhone-${index}`}>Candidate's Phone Number</label>
+              <label>Phone Number</label>
               <input
                 type="tel"
-                id={`candidatePhone-${index}`}
                 value={candidate.phone}
                 onChange={(e) => handleCandidateChange(index, "phone", e.target.value)}
                 placeholder="+91XXXXXXXXXX"
                 required
               />
-              {/* Minus Icon to Remove Candidate Fields */}
-              {index !== candidates.length - 1 && ( // Show minus icon for all fields except the last one
-                <button
-                  type="button"
-                  className="remove-icon"
+              {/* Show minus icon for all candidates except when there's only one */}
+              {candidates.length > 1 && (
+                <button 
+                  className="remove-icon" 
                   onClick={() => removeCandidateField(index)}
+                  type="button"
                 >
-                  <i className="fa-solid fa-minus"></i>
+                  <FontAwesomeIcon icon={faMinus} />
                 </button>
               )}
-              {/* Plus Icon to Add More Candidates */}
-              {index === candidates.length - 1 && ( // Show plus icon only for the last candidate
-                <button type="button" className="add-more-icon" onClick={addCandidateField}>
-                  <i className="fa-solid fa-plus"></i>
+              {/* Show plus icon only on last candidate when calls remain */}
+              {index === candidates.length - 1 && remainingCalls > candidates.length && (
+                <button 
+                  className="add-more-icon" 
+                  onClick={addCandidateField}
+                  type="button"
+                >
+                  <FontAwesomeIcon icon={faPlus} />
                 </button>
               )}
             </div>
           </div>
         ))}
 
-        {/* Job Role Field */}
+        {/* Call limit reached alert - shows when user has added max candidates */}
+        {remainingCalls > 0 && candidates.length === remainingCalls && (
+          <div className="call-limit-alert">
+            <FontAwesomeIcon icon={faTriangleExclamation} />
+            You've used all remaining calls in your current plan.
+          </div>
+        )}
+
+        {/* Job details */}
         <div className="form-group">
-          <label htmlFor="jobRole">Job Role</label>
+          <label>Job Role</label>
           <input
             type="text"
-            id="jobRole"
             value={jobRole}
             onChange={(e) => setJobRole(e.target.value)}
-            placeholder="Enter the job role (e.g., Software Engineer)"
+            placeholder="Enter job role"
             required
           />
         </div>
 
-        {/* Job Description Field */}
         <div className="form-group">
-          <label htmlFor="jobDescription">Job Description</label>
+          <label>Job Description</label>
           <textarea
-            id="jobDescription"
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Enter the job description"
+            placeholder="Enter job description"
             required
           />
         </div>
 
-        {/* Interview Date & Time Field */}
         <div className="form-group">
-          <label htmlFor="interviewDateTime">Interview Date & Time</label>
+          <label>Interview Date & Time</label>
           <input
             type="datetime-local"
-            id="interviewDateTime"
             value={interviewDateTime}
             onChange={(e) => setInterviewDateTime(e.target.value)}
             required
           />
         </div>
 
-        {/* Schedule Button */}
-        <button className="scheduler-button" onClick={handleScheduler} disabled={loading}>
-          {loading ? "Scheduling..." : "Schedule"}
-        </button>
-
-        {/* Display Success and Error Messages Here */}
+        {/* Status messages */}
         {successMessage && <p className="success-message">{successMessage}</p>}
         {error && <p className="error-message">{error}</p>}
+
+        {/* Schedule button */}
+        <button
+          className="scheduler-button"
+          onClick={handleScheduler}
+          disabled={loading || remainingCalls === 0}
+        >
+          {loading ? "Scheduling..." : "Schedule"}
+        </button>
       </div>
     </div>
   );

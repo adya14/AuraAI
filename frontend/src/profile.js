@@ -137,8 +137,10 @@ const Profile = ({ onClose }) => {
   if (loading) return <div className="loading"></div>;
 
   return (
-    <div className="profile-modal-overlay">
-      <div className="profile-container">
+    <div className="profile-modal-overlay"
+    onClick={onClose}>
+      <div className="profile-container"
+      onClick={(e) => e.stopPropagation()}>
         {/* Close Button */}
         <button className="close-button" onClick={onClose}>
           <FontAwesomeIcon icon={faXmark} />

@@ -22,8 +22,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 1%;
-  background-color: rgba(250, 250, 250, 0);
+  padding: 10px 1%;
+  background-color:#ffffff00 !important; 
   position: static;
   width: 100%;
   top: 0;
@@ -79,11 +79,11 @@ body {
   text-align: center;
   padding: 110px 5% 10px;
   background-image: url('./images/background.gif');
-  background-size: 1000px;
+  background-size: 900px;
   background-position: center center;
   background-repeat: no-repeat;
   color: rgb(21, 20, 20);
-  height: 90vh;
+  height: 70vh;
 }
 
 .hero h1 {

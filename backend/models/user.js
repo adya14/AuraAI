@@ -7,13 +7,15 @@ const userSchema = new mongoose.Schema({
   verificationCode: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: function() { return !this.googleId; } },
-  googleId: { type: String, unique: true, sparse: true }, // For Google OAuth users
-  plan: { type: String, default: 'No active plan' }, // Example: Free, Premium, etc.
-  otp: { type: String }, // Add this field
-  otpExpiry: { type: Date }, // Add this field
+  googleId: { type: String, unique: true, sparse: true }, 
+  plan: { type: String, default: 'No active plan' }, 
+  totalCalls: { type: Number, default: 0 }, 
+  usedCalls: { type: Number, default: 0 },
+  totalCallsTillDate: { type: Number, default: 0 },
+  otp: { type: String }, 
+  otpExpiry: { type: Date }, 
 });
 
-// Hash the password before saving the user (only if the password is modified)
 userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
@@ -21,4 +23,5 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// userSchema.index({ email: 1 }, { unique: true });
 module.exports = mongoose.model('User', userSchema);

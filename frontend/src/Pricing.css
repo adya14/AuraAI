@@ -29,7 +29,7 @@
   padding: 20px;
   border-radius: 20px;
   width: 25vw; /* Scales with screen width */
-  height: 60%; /* Maintain aspect ratio */
+  height: 75%; /* Maintain aspect ratio */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.5s ease, opacity 0.5s ease, z-index 0.5s ease;
   position: absolute;
@@ -37,7 +37,7 @@
 
 /* Make Text Responsive */
 .pricing-cards .card h2 {
-  font-size: 1.8vw; /* Scale with screen size */
+  font-size: 1.8vw;
   margin-bottom: 2vh;
 }
 
@@ -53,22 +53,27 @@
 }
 
 .pricing-cards .card ul li {
-  font-size: 1.3vw; /* Responsive text */
+  font-size: 1.3vw; 
   margin-bottom: 1vh;
 }
 
-.pricing-cards .card .pricing-button {
+.pricing-button,
+.know-more-button {
   background-color: #2f2f2f;
   color: white;
-  padding: 1vh 2vw;
-  border-radius: 8px;
+  padding: 2vh 2vw;
+  border-radius: 20px;
   border: none;
   cursor: pointer;
-  font-size: 1vw; /* Scale button text */
+  font-size: 1vw; 
   transition: all 0.3s;
+  display: block;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 5% auto;
 }
-
-.pricing-cards .card .pricing-button:hover {
+.know-more-button:hover,
+.pricing-button:hover {
   transform: scale(1.1);
 }
 
@@ -81,6 +86,106 @@
 .scroll-reveal.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Plan Details Modal Styles */
+.plan-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #212121; /* Pure black */
+  padding: 30px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  color: #fff; 
+  border: 1px solid #333;
+}
+
+.close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #fff; /* White close button */
+  transition: color 0.2s;
+  z-index: 1001;
+}
+
+.close-modal:hover {
+  color: #ccc; /* Slightly gray on hover */
+}
+
+.plan-description {
+  font-size: 1.1rem;
+  color: #fff; /* White */
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.plan-section {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333; /* Subtle separator */
+  padding-bottom: 15px;
+}
+
+.plan-section:last-child {
+  border-bottom: none;
+}
+
+.plan-section h3 {
+  color: #fff; /* White */
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.plan-section ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.plan-section ul li {
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  color: #fff; /* White */
+}
+
+.feature-icon {
+  color: #4CAF50; /* Keeping the green icon for contrast */
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.modal-buy-button {
+  background-color: #fdf8f8;
+  color: rgb(47, 47, 47);
+  border: none;
+  padding: 12px 25px;
+  border-radius: 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 50%;
+  transition: all 0.2s;
+}
+
+.modal-buy-button:hover {
+  transform: scale(1.1);
 }
 
 /* Keep Shape But Scale Text on Tablets */

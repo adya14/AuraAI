@@ -50,21 +50,21 @@ function App() {
     };
   }, [location.pathname]);
 
-    // Handle scroll to a specific section
-    const scrollToSection = (sectionId) => {
-      if (location.pathname !== "/") {
-        navigate("/"); // Redirect to the home page if not already there
+  // Handle scroll to a specific section
+  const scrollToSection = (sectionId) => {
+    if (location.pathname !== "/") {
+      navigate("/"); // Redirect to the home page if not already there
+    }
+
+    // Use a timeout to ensure the home page has loaded before scrolling
+    setTimeout(() => {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth" });
       }
-  
-      // Use a timeout to ensure the home page has loaded before scrolling
-      setTimeout(() => {
-        const section = document.getElementById(sectionId);
-        if (section) {
-          section.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100); // Adjust the timeout if needed
-    };
-  
+    }, 100); // Adjust the timeout if needed
+  };
+
   // Function to toggle FAQ
   const toggleFAQ = (index) => {
     if (activeIndex === index) {
@@ -293,12 +293,12 @@ function App() {
 
             {/* How It Works Section */}
             <section className="how-it-works">
-              <h2>How It Works?</h2>
+              <h2>How It Works</h2>
               <div className="point point-1 scroll-reveal">
                 <div className="point-content">
-                  <h3>Schedule an Interview</h3>
+                  <h3>Choose Your Plan</h3>
                   <p>
-                    Easily schedule interviews at your convenience. Select a date and time that works best for both you and the candidate. Our system ensures seamless scheduling with automated reminders for both parties.
+                    Select a subscription that fits your hiring needs. Our flexible plans range from pay-as-you-go to unlimited interviews, with transparent pricing.
                   </p>
                 </div>
                 <div className="point-number">01</div>
@@ -306,17 +306,17 @@ function App() {
               <div className="point point-2 scroll-reveal">
                 <div className="point-number">02</div>
                 <div className="point-content">
-                  <h3>Enter Candidate Details</h3>
+                  <h3>Access Your Dashboard</h3>
                   <p>
-                    Provide the candidate's phone number, job description, and role specifics. Our AI uses this information to tailor the interview questions, ensuring a personalized and relevant experience for each candidate.
+                    After purchasing, you'll land in your dashboard where you can manage interviews, view reports, and schedule new calls with a single click.
                   </p>
                 </div>
               </div>
               <div className="point point-3 scroll-reveal">
                 <div className="point-content">
-                  <h3>Candidate Joins the Interview</h3>
+                  <h3>Schedule the Interview</h3>
                   <p>
-                    Candidates receive a direct phone call at the scheduled time—no apps or downloads required. They can join the interview from anywhere, making the process hassle-free and accessible.
+                    Click "Schedule Call", pick a time, and fill in candidate details including their phone number and job requirements.
                   </p>
                 </div>
                 <div className="point-number">03</div>
@@ -324,17 +324,17 @@ function App() {
               <div className="point point-4 scroll-reveal">
                 <div className="point-number">04</div>
                 <div className="point-content">
-                  <h3>AI Conducts the Interview</h3>
+                  <h3>Candidate Receives Call</h3>
                   <p>
-                    Our advanced AI conducts the interview, asking tailored questions based on the job role. It evaluates responses in real-time, adapts the conversation, and ensures a natural and engaging interaction.
+                    At the scheduled time, our system automatically calls the candidate. No apps needed - they just answer their phone.
                   </p>
                 </div>
               </div>
               <div className="point point-5 scroll-reveal">
                 <div className="point-content">
-                  <h3>Data-Driven Insights</h3>
+                  <h3>AI Conducts Interview</h3>
                   <p>
-                    After the interview, receive a comprehensive report with detailed scores, insights, and recommendations. Our AI analyzes key metrics such as communication skills, technical knowledge, and cultural fit.
+                    Our AI asks role-specific questions, evaluates responses in real-time, and adapts the conversation naturally.
                   </p>
                 </div>
                 <div className="point-number">05</div>
@@ -342,9 +342,9 @@ function App() {
               <div className="point point-6 scroll-reveal">
                 <div className="point-number">06</div>
                 <div className="point-content">
-                  <h3>Review and Hire</h3>
+                  <h3>Review & Make Decisions</h3>
                   <p>
-                    Compare candidates effortlessly using the data provided. Make confident hiring decisions backed by actionable insights, ensuring you select the best fit for your team.
+                    Receive detailed reports with scores on skills, communication, and fit. Compare candidates and hire with confidence.
                   </p>
                 </div>
               </div>
@@ -406,7 +406,7 @@ function App() {
           </>
         } />
         <Route path="/contact" element={<Navigate to="/" replace />} />
-        <Route path="/Dashboard" element={<Dashboard />} /> 
+        <Route path="/Dashboard" element={<Dashboard />} />
         <Route path="/Scheduler" element={<Scheduler />} />
         <Route path="/privacyAndTerms" element={<LegalPages />} />
         <Route path="/refund-cancellation-policy" element={<LegalPages />} />
@@ -422,40 +422,40 @@ function App() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
-        <div className="footer-section about-us">
-          <h3>About Us</h3>
-          <p>
-            moon AI is revolutionizing the hiring process with AI-powered phone interviews.
-            Our mission is to make recruitment seamless, efficient, and data-driven.
-          </p>
-          <img src={inverted_logo} alt="moon AI Logo" className="footer-logo" />
-        </div>
-        <div className="footer-section">
-          <h3>Quick Links</h3>
-          <ul>
-            <li>
-              <Link
-                to="/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("contact");
-                }}
-              >
-                Contact
-              </Link>
-            </li>
-            <li><Link to="/refund-cancellation-policy">Privacy and terms</Link></li>
-            <li><Link to="/refund-cancellation-policy">Refund Policy</Link></li>
-          </ul>
-        </div>
+          <div className="footer-section about-us">
+            <h3>About Us</h3>
+            <p>
+              moon AI is revolutionizing the hiring process with AI-powered phone interviews.
+              Our mission is to make recruitment seamless, efficient, and data-driven.
+            </p>
+            <img src={inverted_logo} alt="moon AI Logo" className="footer-logo" />
+          </div>
+          <div className="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+              <li>
+                <Link
+                  to="/"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection("contact");
+                  }}
+                >
+                  Contact
+                </Link>
+              </li>
+              <li><Link to="/refund-cancellation-policy">Privacy and terms</Link></li>
+              <li><Link to="/refund-cancellation-policy">Refund Policy</Link></li>
+            </ul>
+          </div>
           <div className="footer-section">
             <div className="footer-section contact-us">
-            <h3>Contact Us</h3>
-            <ul>
-              <li>Email: moon.voice.ai@gmail.com</li>
-              <li>Phone: +91 88516 19182</li>
-              <li>Adress: Block O, Type V(B), Sector 10, Nivedita Kunj, RK Puram Delhi India, 110022</li>
-            </ul>
+              <h3>Contact Us</h3>
+              <ul>
+                <li>Email: moon.voice.ai@gmail.com</li>
+                <li>Phone: +91 88516 19182</li>
+                {/* <li>Adress: Block O, Type V(B), Sector 10, Nivedita Kunj, RK Puram Delhi India, 110022</li> */}
+              </ul>
             </div>
           </div>
           <div className="footer-section">

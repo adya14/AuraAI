@@ -18,7 +18,7 @@ TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 RECIPIENT_PHONE_NUMBER = os.getenv('RECIPIENT_PHONE_NUMBER')
-NGROK_URL = "https://2957-205-254-176-129.ngrok-free.app"
+NGROK_URL = "https://6d8c-205-254-176-80.ngrok-free.app"
 
 app = FastAPI()
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -145,7 +145,6 @@ async def process_response(SpeechResult: str = Form(None), CallSid: str = Form(N
             <Response>
                 <Say>{ai_response}</Say>
                 <Gather input="speech" action="{NGROK_URL}/process-response" timeout="5">
-                    <Say>Please continue.</Say>
                 </Gather>
             </Response>
             """
@@ -154,7 +153,6 @@ async def process_response(SpeechResult: str = Form(None), CallSid: str = Form(N
             <Response>
                 <Say>{ai_response}</Say>
                 <Gather input="speech" action="{NGROK_URL}/process-response" timeout="5">
-                    <Say>Please continue.</Say>
                 </Gather>
             </Response>
             """

@@ -6,3 +6,7 @@ function getInterviewPrompt(role, jobDescription) {
     },
   ];
 }
+
+module.exports = {
+  getInterviewPrompt
+};
