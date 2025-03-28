@@ -106,7 +106,16 @@ const Caller = () => {
       <div className="schedule-call-prompt">
         <p>Do you want to schedule an interview?</p>
         <FontAwesomeIcon icon={faArrowRight} className="arrow-icon" />
-        <button className="caller-button schedule-call" onClick={() => navigate("/Scheduler")}>
+        <button
+          className="caller-button schedule-call"
+          onClick={() => {
+            if (userPlan.activePlan && userPlan.activePlan !== "No active plan") {
+              navigate("/Scheduler");
+            } else {
+              alert("You need an active plan to schedule a call.");
+            }
+          }}
+        >
           Schedule a Call <FontAwesomeIcon icon={faPhone} className="button-icon" />
         </button>
       </div>
