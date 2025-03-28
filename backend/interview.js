@@ -3,10 +3,6 @@ const { getInterviewPrompt } = require('./prompt');
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Constants for role and job description
-// const ROLE = "SDE"; 
-// const JOB_DESCRIPTION = "Python, ML, Cloud"; 
-
 /**
  * Convert audio to text using OpenAI's Whisper API.
  * @param {Buffer} audioFile - The audio file to transcribe.
@@ -58,8 +54,7 @@ async function getAiResponse(text, role, jobDescription, requestRating = false, 
           "score": 7,
           "justification": "Candidate showed good technical skills but lacked depth in...",
           "breakdown": [
-            {"category": "Technical", "score": 8, "comment": "Strong fundamentals..."},
-            {"category": "Communication", "score": 6, "comment": "Could be more concise..."}
+            {"score": 8, "comment": "Strong fundamentals..."},
           ]
         }`
       });

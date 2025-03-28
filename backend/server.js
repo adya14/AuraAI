@@ -11,17 +11,31 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { transcribeAudio, getAiResponse } = require('./interview');
 const app = express();
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN); // Initialize Twilio client
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const allowedOrigins = [
   "http://localhost:3000",
   "https://moon-ai-one.vercel.app"
 ];
+const WebSocket = require('ws');
+const { PassThrough } = require('stream');
 
-//conversation logger helper
+// Create WebSocket server
+const server = require('http').createServer(app);
+const wss = new WebSocket.Server({ server, path: '/stream' });
+
+// Conversation logger helper
 function logConversation(callSid, speaker, text) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] [Call ${callSid}] [${speaker}]: ${text}`);
 }
+
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path === '/process-response') {
+    console.log('Incoming callSid:', req.body.callSid);
+    console.log('Current states:', Array.from(interviewState.keys()));
+  }
+  next();
+});
 
 // Enable CORS for all routes
 app.use(cors({
@@ -36,16 +50,15 @@ connectDB();
 
 // Middleware to parse JSON requests
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
 
 // Initialize Passport
 app.use(passport.initialize());
 
-// Use your authentication routes
+// Use authentication routes
 app.use('/', authRoutes);
 
-// Add a route for the root URL
+// Root URL route
 app.get('/', (req, res) => {
   res.send('Backend/Twilio server is running!');
 });
@@ -59,13 +72,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Route to handle contact form submissions
+// Contact form submissions
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "adyatwr@gmail.com",  // Change this to your actual email
+    to: "adyatwr@gmail.com",
     subject: "New Message from Moon AI Contact Form",
     text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
   };
@@ -80,10 +93,114 @@ app.post("/send-email", async (req, res) => {
   }
 });
 
-// Track interview state (in-memory storage; replace with a database in production)
-const interviewState = new Map();
+// Persistent state storage
+if (!global.interviewState) {
+  global.interviewState = new Map();
+  console.log('Initialized new interviewState Map');
+}
+const interviewState = global.interviewState;
 
-// Route to schedule and make calls
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+  console.log('\n=== NEW WEBSOCKET CONNECTION ===');
+  let callSid = null;
+  let audioBuffer = [];
+  let isSpeaking = false;
+  let silenceTimer = null;
+
+  // Heartbeat tracking
+  ws.isAlive = true;
+  ws.on('pong', () => { 
+    ws.isAlive = true;
+    console.log(`[HB] ${callSid || 'unknown'} alive`);
+  });
+
+  ws.on('message', async (message) => {
+    try {
+      const data = JSON.parse(message);
+      callSid = data.start?.callSid || data.callSid || data.stop?.callSid;
+      
+      // Log event type without media spam
+      if (data.event !== 'media') {
+        console.log(`[WS ${data.event}] ${callSid || 'unknown'}`);
+      }
+
+      // Bind callSid to connection
+      if (callSid && !ws.callSid) {
+        ws.callSid = callSid;
+        console.log(`Call ${callSid} bound to WS`);
+      }
+
+      // Handle media events
+      if (data.event === 'media') {
+        const audio = Buffer.from(data.media.payload, 'base64');
+        
+        // Skip silent audio
+        if (!isSilentAudio(data.media.payload)) {
+          audioBuffer.push(audio);
+          
+          if (!isSpeaking) {
+            isSpeaking = true;
+            console.log(`[Speech Start] ${callSid}`);
+          }
+
+          // Reset silence timer
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(async () => {
+            if (isSpeaking) {
+              isSpeaking = false;
+              console.log(`[Speech End] ${callSid}`);
+              
+              try {
+                const combinedAudio = Buffer.concat(audioBuffer);
+                const transcription = await transcribeAudio(combinedAudio);
+                console.log(`[Transcript] ${callSid}:`, transcription);
+                
+                // Process response
+                if (callSid && interviewState.has(callSid)) {
+                  const state = interviewState.get(callSid);
+                  // ... your response handling logic ...
+                }
+              } catch (error) {
+                console.error(`[Transcribe Error] ${callSid}:`, error);
+              }
+              
+              audioBuffer = [];
+            }
+          }, 1000); // 1s silence threshold
+        }
+      }
+      
+    } catch (error) {
+      console.error('[WS Error]', error.message);
+    }
+  });
+
+  ws.on('close', () => {
+    if (silenceTimer) clearTimeout(silenceTimer);
+    console.log(`[WS Closed] ${callSid || 'unknown'}`);
+  });
+});
+
+// Ping all clients every 15s
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) {
+      console.log(`Terminating dead connection: ${ws.callSid || 'unknown'}`);
+      return ws.terminate();
+    }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 15000);
+
+// Helper to detect silent audio
+function isSilentAudio(payload) {
+  return payload.startsWith('/v7+/') || 
+         payload.includes('////////////////////////////////////////////////////////////////');
+}
+
+// Schedule and make calls
 app.post("/make-call", async (req, res) => {
   const { jobRole, jobDescription, candidates, scheduledTime, email } = req.body;
 
@@ -124,40 +241,42 @@ app.post("/make-call", async (req, res) => {
       email,
     });
     await scheduledCall.save();
+    console.log("WebSocket URL:", `wss://${process.env.BACKEND_URL}/stream`);
 
     const delay = scheduledDate.getTime() - now.getTime();
 
-    // In your /make-call endpoint, modify the call creation:
     setTimeout(async () => {
       try {
         for (const candidate of candidates) {
           const initialPrompt = `Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?`;
 
-          // Create call with initial TwiML
           const call = await client.calls.create({
             to: candidate.phone,
             from: process.env.TWILIO_PHONE_NUMBER,
             twiml: `
-          <Response>
-            <Say>${initialPrompt}</Say>
-            <Pause length="2"/>
-            <Gather input="speech" action="${process.env.BACKEND_URL}/process-response" timeout="10"/>
-          </Response>
-        `,
+              <Response>
+                <Say voice="woman" language="en-US">
+                  Connecting you to your interview now...
+                </Say>
+                <Connect timeout="60">
+                  <Stream url="wss://${process.env.BACKEND_URL}/stream"/>
+                </Connect>
+              </Response>
+            `
           });
 
           const callSid = call.sid;
-
-          // Set interview state immediately
           interviewState.set(callSid, {
             jobRole,
             jobDescription,
             conversationHistory: [{ role: "assistant", content: initialPrompt }],
             isIntroductionDone: false,
             inQnaPhase: false,
-            questionCount: 0
+            questionCount: 0,
+            candidatePhone: candidate.phone
           });
-
+          console.log(`[STATE SAVED] CallSid: ${callSid}`);
+          console.log(`[CURRENT STATES]`, Array.from(interviewState.keys()));
           logConversation(callSid, 'AI', initialPrompt);
           console.log(`Call initiated to ${candidate.phone}. SID: ${callSid}`);
         }
@@ -182,139 +301,75 @@ app.post("/make-call", async (req, res) => {
   }
 });
 
+// Process response endpoint
 app.post('/process-response', async (req, res) => {
-  const { SpeechResult, CallSid } = req.body;
-  const callSid = req.body.CallSid || req.query.CallSid;
+  const { transcription, callSid } = req.body;
+  const twiml = new twilio.twiml.VoiceResponse();
+
+  console.log('\n=== NEW PROCESS-RESPONSE REQUEST ===');
+  console.log('Current States:', Array.from(interviewState.keys()));
+  console.log('Incoming callSid:', callSid);
 
   try {
-    if (!callSid) {
-      throw new Error("Missing CallSid in request");
+    // Validate input
+    if (!callSid?.match(/^CA[0-9a-f]{32}$/i)) {
+      throw new Error(`Invalid callSid format: ${callSid}`);
     }
 
+    // Get or create state (temporary fallback)
     const state = interviewState.get(callSid);
     if (!state) {
-      throw new Error(`No state found for CallSid: ${callSid}`);
+      throw new Error(`No state found for ${callSid}. Active calls: ${Array.from(interviewState.keys())}`);
+    }
+    if (!state) {
+      console.warn('State not found, creating temporary state');
+      state = {
+        jobRole: 'fallback-role',
+        jobDescription: 'fallback-description',
+        conversationHistory: []
+      };
     }
 
-    let userResponse = SpeechResult;
-    if (!userResponse) {
-      const twiml = `
-        <Response>
-          <Say>I didn't hear anything. Please try again.</Say>
-          <Gather input="speech" action="${process.env.BACKEND_URL}/process-response?CallSid=${callSid}" timeout="5">
-            <Say>..</Say>
-          </Gather>
-        </Response>
-      `;
-      return res.type('text/xml').send(twiml);
-    }
-
-    state.conversationHistory.push({ role: "user", content: userResponse });
-
-    let aiResponse;
-    let shouldEndCall = false;
-    let ratingData = null;
-
-    // Check if we need to transition to Q&A phase
-    if (state.questionCount >= 2 && !state.inQnaPhase) {
-      state.inQnaPhase = true;
-      aiResponse = "Thank you for your time. Do you have any questions for me?";
-    } 
-    // Handle Q&A phase
-    else if (state.inQnaPhase) {
-      // Check if user asked a question (simple detection)
-      const isQuestion = /^(do|can|what|when|where|why|how|who|is|are|will|would|could)/i.test(userResponse.trim());
-      
-      if (isQuestion) {
-        // Answer the question
-        aiResponse = await getAiResponse(
-          userResponse,
-          state.jobRole,
-          state.jobDescription,
-          false,
-          state.conversationHistory
-        );
-        aiResponse += " Thank you for your time. We'll get back to you soon.";
-      } else {
-        // No question asked
-        aiResponse = "Thank you for your time. We'll get back to you soon.";
-      }
-
-      // Generate rating (not spoken to candidate)
-      const ratingResponse = await getAiResponse(
-        "Please provide rating for this candidate.",
-        state.jobRole,
-        state.jobDescription,
-        true,
-        state.conversationHistory
-      );
-
-      try {
-        ratingData = JSON.parse(ratingResponse);
-        console.log('Candidate Rating:', ratingData);
-        
-        // Save to database
-        await ScheduledCall.updateOne(
-          { 'candidates.phone': state.candidatePhone },
-          { $set: { 
-            'candidates.$.score': ratingData.score,
-            'candidates.$.scoreJustification': ratingData.justification,
-            'candidates.$.scoreBreakdown': ratingData.breakdown 
-          }}
-        );
-      } catch (e) {
-        console.error("Error parsing rating:", e);
-      }
-
-      shouldEndCall = true;
-    } 
-    // Normal interview flow
-    else {
-      aiResponse = await getAiResponse(
-        userResponse,
-        state.jobRole,
-        state.jobDescription,
-        false,
-        state.conversationHistory
-      );
-      state.questionCount += 1;
-    }
+    // Process conversation
+    state.conversationHistory.push({ role: "user", content: transcription });
+    
+    const aiResponse = String(await getAiResponse(
+      transcription,
+      state.jobRole,
+      state.jobDescription,
+      false,
+      state.conversationHistory
+    )).trim();
 
     state.conversationHistory.push({ role: "assistant", content: aiResponse });
-    logConversation(callSid, 'AI', aiResponse);
 
-    const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say(aiResponse);
-    
-    if (shouldEndCall) {
-      twiml.hangup();
-    } else {
-      twiml.gather({
-        input: 'speech',
-        action: `${process.env.BACKEND_URL}/process-response?CallSid=${callSid}`,
-        timeout: 5
-      });
-    }
+    // Generate TwiML
+    twiml.say({
+      voice: 'woman',
+      language: 'en-US'
+    }, aiResponse);
 
-    res.type('text/xml').send(twiml.toString());
+    twiml.connect().stream({
+      url: `wss://${process.env.BACKEND_URL}/stream`
+    });
+
+    console.log('Generated TwiML:', twiml.toString());
+
   } catch (error) {
-    console.error(`Error processing response: ${error.message}`);
-    const twiml = `
-      <Response>
-        <Say>Sorry, an error occurred. Ending the call.</Say>
-        <Hangup/>
-      </Response>
-    `;
-    res.type('text/xml').send(twiml);
+    console.error('Error:', error.message);
+    twiml.say('We encountered a technical difficulty. Goodbye.');
+    twiml.hangup();
   }
+
+  res.type('text/xml').send(twiml.toString());
 });
 
-// Fetch scheduled calls for the user
+// Fetch scheduled calls
 app.get("/scheduled-calls", async (req, res) => {
   const { email } = req.query;
 
   try {
-    const scheduledCalls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 }); // Fetch calls sorted by date
+    const scheduledCalls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 });
     res.status(200).json(scheduledCalls);
   } catch (error) {
     console.error(`Error fetching scheduled calls: ${error.message}`);
@@ -322,11 +377,11 @@ app.get("/scheduled-calls", async (req, res) => {
   }
 });
 
-// Handle preflight requests for all routes
+// Handle preflight requests
 app.options('*', cors());
 
 // Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

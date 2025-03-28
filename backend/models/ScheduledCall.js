@@ -11,7 +11,7 @@ const ScheduledCallSchema = new mongoose.Schema({
     },
   ],
   scheduledTime: { type: Date, required: true },
-  email: { type: String, required: true }, // Use email instead of userId
+  email: { type: String, required: true }, 
 });
 
 module.exports = mongoose.model("ScheduledCall", ScheduledCallSchema);
