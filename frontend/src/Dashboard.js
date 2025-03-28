@@ -109,14 +109,13 @@ const Caller = () => {
         <button
           className="caller-button schedule-call"
           onClick={() => {
-            if (userPlan.activePlan && userPlan.activePlan !== "No active plan") {
+            if (userPlan.activePlan && userPlan.activePlan === "Basic Plan") {
               navigate("/Scheduler");
             } else {
               alert("You need an active plan to schedule a call.");
             }
           }}
-        >
-          Schedule a Call <FontAwesomeIcon icon={faPhone} className="button-icon" />
+        >          Schedule a Call <FontAwesomeIcon icon={faPhone} className="button-icon" />
         </button>
       </div>
 
