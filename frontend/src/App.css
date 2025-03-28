@@ -439,9 +439,9 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  background-color: #ffffffda;
+  background-color: #ffffffd8;
   transform: translate(-50%, -50%);
-  background: rgba(252, 252, 252, 0.619);
+  background: rgb(252, 252, 252);
   backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 35px;

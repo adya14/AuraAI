@@ -102,7 +102,7 @@
 }
 
 .modal-content {
-  background-color: #212121; /* Pure black */
+  background-color: #212121; 
   padding: 30px;
   max-width: 600px;
   width: 90%;
@@ -124,10 +124,6 @@
   color: #fff; /* White close button */
   transition: color 0.2s;
   z-index: 1001;
-}
-
-.close-modal:hover {
-  color: #ccc; /* Slightly gray on hover */
 }
 
 .plan-description {
@@ -166,7 +162,7 @@
 }
 
 .feature-icon {
-  color: #4CAF50; /* Keeping the green icon for contrast */
+  color: #4CAF50; 
   margin-right: 10px;
   font-size: 1.2rem;
 }
