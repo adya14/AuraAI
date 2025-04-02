@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faArrowRight, faSearch, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faPhone, faArrowRight, faSearch, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import axios from "axios";
 import "./Dashboard.css";
 
@@ -9,30 +9,23 @@ const Caller = () => {
   const navigate = useNavigate();
   const [scheduledCalls, setScheduledCalls] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [clickPosition, setClickPosition] = useState({ top: 0, left: 0 });
   const [userPlan, setUserPlan] = useState({
     activePlan: null,
     totalCalls: 0,
     usedCalls: 0,
     totalCallsTillDate: 0,
   });
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const openScoreDetailsModal = (candidate, event) => {
-    setSelectedCandidate(candidate);
 
-    // Get exact cursor position
-    const clickX = event.clientX;
-    const clickY = event.clientY;
-
-    setClickPosition({
-      top: clickY,
-      left: clickX
+  // Navigate to interview details page
+  const navigateToInterviewDetails = (call, candidate) => {
+    navigate('/interview-details', {
+      state: {
+        callData: call,
+        candidateData: candidate
+      }
     });
   };
 
-  const closeScoreDetailsModal = () => {
-    setSelectedCandidate(null);
-  };
   // Fetch user's active plan and call usage on component mount
   useEffect(() => {
     const fetchUserPlan = async () => {
@@ -47,7 +40,7 @@ const Caller = () => {
           params: { email },
         });
 
-        setUserPlan(response.data); // Update userPlan state with fetched data
+        setUserPlan(response.data);
       } catch (error) {
         console.error("Error fetching user plan:", error);
       }
@@ -247,7 +240,7 @@ const Caller = () => {
                           className="score-info-icon"
                           onClick={(e) => {
                             e.stopPropagation();
-                            openScoreDetailsModal(candidate, e);
+                            navigateToInterviewDetails(call, candidate);
                           }}
                         />
                       </td>
@@ -257,49 +250,6 @@ const Caller = () => {
             )}
           </tbody>
         </table>
-
-        {/* Score Details Modal */}
-        {selectedCandidate && (
-          <div className="score-details-modal">
-            <div
-              className="modal-content"
-              style={{
-                position: "fixed",
-                top: `${clickPosition.top}px`,
-                left: `${clickPosition.left}px`,
-                transform: "translate(-120%, 100%)",
-                zIndex: 1001
-              }}
-            >
-              <button className="close-modal" onClick={closeScoreDetailsModal}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-              <h4>Interview Details for {selectedCandidate.name}</h4>
-              <div className="score-justification">
-                {selectedCandidate.score ? (
-                  <>
-                    <h4>AI Evaluation:</h4>
-                    <p>{selectedCandidate.scoreJustification || "No detailed evaluation available."}</p>
-                  </>
-                ) : (
-                  <p>Call was not picked by the candidate</p>
-                )}
-              </div>
-              {selectedCandidate.score && (
-                <div className="score-breakdown">
-                  <h4>Score Breakdown:</h4>
-                  <ul>
-                    {selectedCandidate.scoreBreakdown?.map((item, i) => (
-                      <li key={i}>
-                        <strong>{item.category}:</strong> {item.score}/10 - {item.comment}
-                      </li>
-                    )) || <li>No detailed breakdown available.</li>}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

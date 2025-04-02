@@ -17,7 +17,6 @@ const allowedOrigins = [
   "https://moon-ai-one.vercel.app"
 ];
 const WebSocket = require('ws');
-const { PassThrough } = require('stream');
 
 // Create WebSocket server
 const server = require('http').createServer(app);
@@ -28,11 +27,13 @@ function logConversation(callSid, speaker, text) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] [Call ${callSid}] [${speaker}]: ${text}`);
 }
-
+app.use(express.json()); // This parses JSON bodies
+app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.path === '/process-response') {
     console.log('Incoming callSid:', req.body.callSid);
     console.log('Current states:', Array.from(interviewState.keys()));
+    console.log('Incoming request body:', req.body);
   }
   next();
 });
@@ -101,44 +102,28 @@ if (!global.interviewState) {
 const interviewState = global.interviewState;
 
 // WebSocket connection handler
+// WebSocket connection handler - Updated version
 wss.on('connection', (ws) => {
   console.log('\n=== NEW WEBSOCKET CONNECTION ===');
   let callSid = null;
   let audioBuffer = [];
   let isSpeaking = false;
   let silenceTimer = null;
-
-  // Heartbeat tracking
-  ws.isAlive = true;
-  ws.on('pong', () => { 
-    ws.isAlive = true;
-    console.log(`[HB] ${callSid || 'unknown'} alive`);
-  });
+  const SPEECH_END_TIMEOUT = 1000; // 1 second silence = speech end
+  const MIN_AUDIO_LENGTH = 8000; // Minimum audio to process (~0.5s)
 
   ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
       callSid = data.start?.callSid || data.callSid || data.stop?.callSid;
       
-      // Log event type without media spam
-      if (data.event !== 'media') {
-        console.log(`[WS ${data.event}] ${callSid || 'unknown'}`);
-      }
-
-      // Bind callSid to connection
-      if (callSid && !ws.callSid) {
-        ws.callSid = callSid;
-        console.log(`Call ${callSid} bound to WS`);
-      }
-
-      // Handle media events
       if (data.event === 'media') {
         const audio = Buffer.from(data.media.payload, 'base64');
         
-        // Skip silent audio
-        if (!isSilentAudio(data.media.payload)) {
+        if (!isSilentAudio(audio)) {
           audioBuffer.push(audio);
           
+          // Speech started
           if (!isSpeaking) {
             isSpeaking = true;
             console.log(`[Speech Start] ${callSid}`);
@@ -150,36 +135,61 @@ wss.on('connection', (ws) => {
             if (isSpeaking) {
               isSpeaking = false;
               console.log(`[Speech End] ${callSid}`);
-              
-              try {
-                const combinedAudio = Buffer.concat(audioBuffer);
-                const transcription = await transcribeAudio(combinedAudio);
-                console.log(`[Transcript] ${callSid}:`, transcription);
-                
-                // Process response
-                if (callSid && interviewState.has(callSid)) {
-                  const state = interviewState.get(callSid);
-                  // ... your response handling logic ...
-                }
-              } catch (error) {
-                console.error(`[Transcribe Error] ${callSid}:`, error);
-              }
-              
-              audioBuffer = [];
+              await processUserSpeech();
             }
-          }, 1000); // 1s silence threshold
+          }, SPEECH_END_TIMEOUT);
         }
       }
-      
     } catch (error) {
-      console.error('[WS Error]', error.message);
+      console.error('[WS Error]', error);
     }
   });
 
-  ws.on('close', () => {
-    if (silenceTimer) clearTimeout(silenceTimer);
-    console.log(`[WS Closed] ${callSid || 'unknown'}`);
-  });
+  async function processUserSpeech() {
+    if (!audioBuffer.length || !callSid) return;
+    
+    try {
+      const combinedAudio = Buffer.concat(audioBuffer);
+      
+      // Skip if too short
+      if (combinedAudio.length < MIN_AUDIO_LENGTH) {
+        console.log(`[Too Short] Skipping ${combinedAudio.length} byte buffer`);
+        audioBuffer = [];
+        return;
+      }
+
+      console.log(`[Processing] ${callSid} - ${combinedAudio.length} bytes`);
+      const transcription = await transcribeAudio(combinedAudio);
+      console.log(`[Transcript] ${callSid}:`, transcription);
+      
+      if (interviewState.has(callSid)) {
+        const state = interviewState.get(callSid);
+        state.conversationHistory.push({ role: "user", content: transcription });
+        
+        // Get AI response
+        const aiResponse = await getAiResponse(
+          transcription,
+          state.jobRole,
+          state.jobDescription,
+          false,
+          state.conversationHistory
+        );
+        
+        // Send response back through WebSocket
+        ws.send(JSON.stringify({
+          event: 'ai_response',
+          text: aiResponse,
+          callSid: callSid
+        }));
+        
+        console.log(`[AI Response] ${callSid}:`, aiResponse);
+      }
+    } catch (error) {
+      console.error(`[Processing Error] ${callSid}:`, error.message);
+    } finally {
+      audioBuffer = []; // Clear buffer after processing
+    }
+  }
 });
 
 // Ping all clients every 15s
@@ -195,9 +205,18 @@ setInterval(() => {
 }, 15000);
 
 // Helper to detect silent audio
-function isSilentAudio(payload) {
-  return payload.startsWith('/v7+/') || 
-         payload.includes('////////////////////////////////////////////////////////////////');
+function isSilentAudio(buffer) {
+  // Check if buffer is mostly zeros (silence)
+  const silentThreshold = 0.01;
+  let sum = 0;
+  
+  for (let i = 0; i < buffer.length; i++) {
+    sum += Math.abs(buffer[i] - 128);
+  }
+  
+  const avg = sum / buffer.length;
+  return avg < silentThreshold || 
+         buffer.length < 100; // Very short buffers
 }
 
 // Schedule and make calls
@@ -248,17 +267,12 @@ app.post("/make-call", async (req, res) => {
     setTimeout(async () => {
       try {
         for (const candidate of candidates) {
-          const initialPrompt = `Hi, I am moon, your AI interviewer for the ${jobRole} position. Can you start by introducing yourself?`;
-
           const call = await client.calls.create({
             to: candidate.phone,
             from: process.env.TWILIO_PHONE_NUMBER,
             twiml: `
               <Response>
-                <Say voice="woman" language="en-US">
-                  Connecting you to your interview now...
-                </Say>
-                <Connect timeout="60">
+                <Connect>
                   <Stream url="wss://${process.env.BACKEND_URL}/stream"/>
                 </Connect>
               </Response>
@@ -269,15 +283,9 @@ app.post("/make-call", async (req, res) => {
           interviewState.set(callSid, {
             jobRole,
             jobDescription,
-            conversationHistory: [{ role: "assistant", content: initialPrompt }],
-            isIntroductionDone: false,
-            inQnaPhase: false,
-            questionCount: 0,
+            conversationHistory: [], // Empty initial history
             candidatePhone: candidate.phone
           });
-          console.log(`[STATE SAVED] CallSid: ${callSid}`);
-          console.log(`[CURRENT STATES]`, Array.from(interviewState.keys()));
-          logConversation(callSid, 'AI', initialPrompt);
           console.log(`Call initiated to ${candidate.phone}. SID: ${callSid}`);
         }
       } catch (error) {
@@ -303,65 +311,49 @@ app.post("/make-call", async (req, res) => {
 
 // Process response endpoint
 app.post('/process-response', async (req, res) => {
-  const { transcription, callSid } = req.body;
-  const twiml = new twilio.twiml.VoiceResponse();
-
-  console.log('\n=== NEW PROCESS-RESPONSE REQUEST ===');
-  console.log('Current States:', Array.from(interviewState.keys()));
-  console.log('Incoming callSid:', callSid);
-
+  console.log('\n=== RAW REQUEST BODY ===\n', req.body);
+  
   try {
-    // Validate input
-    if (!callSid?.match(/^CA[0-9a-f]{32}$/i)) {
-      throw new Error(`Invalid callSid format: ${callSid}`);
+    if (!req.body?.callSid || !req.body?.transcription) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get or create state (temporary fallback)
-    const state = interviewState.get(callSid);
-    if (!state) {
-      throw new Error(`No state found for ${callSid}. Active calls: ${Array.from(interviewState.keys())}`);
-    }
-    if (!state) {
-      console.warn('State not found, creating temporary state');
-      state = {
-        jobRole: 'fallback-role',
-        jobDescription: 'fallback-description',
-        conversationHistory: []
-      };
-    }
+    const { transcription, callSid } = req.body;
+    const twiml = new twilio.twiml.VoiceResponse();
 
-    // Process conversation
+    const state = interviewState.get(callSid) || {
+      jobRole: 'default',
+      jobDescription: '',
+      conversationHistory: []
+    };
+
     state.conversationHistory.push({ role: "user", content: transcription });
     
-    const aiResponse = String(await getAiResponse(
+    const aiResponse = await getAiResponse(
       transcription,
       state.jobRole,
       state.jobDescription,
       false,
       state.conversationHistory
-    )).trim();
+    );
 
-    state.conversationHistory.push({ role: "assistant", content: aiResponse });
-
-    // Generate TwiML
+    // Ensure valid TwiML response
     twiml.say({
       voice: 'woman',
       language: 'en-US'
-    }, aiResponse);
+    }, aiResponse.substring(0, 1000)); // Limit length
+    
+    twiml.redirect({
+      method: 'POST'
+    }, `wss://${process.env.BACKEND_URL}/stream`);
 
-    twiml.connect().stream({
-      url: `wss://${process.env.BACKEND_URL}/stream`
-    });
-
-    console.log('Generated TwiML:', twiml.toString());
-
+    res.type('text/xml').send(twiml.toString());
   } catch (error) {
-    console.error('Error:', error.message);
-    twiml.say('We encountered a technical difficulty. Goodbye.');
-    twiml.hangup();
+    console.error('PROCESS-RESPONSE ERROR:', error);
+    const errorTwiml = new twilio.twiml.VoiceResponse();
+    errorTwiml.say('We encountered an error. Please try again later.');
+    res.type('text/xml').send(errorTwiml.toString());
   }
-
-  res.type('text/xml').send(twiml.toString());
 });
 
 // Fetch scheduled calls

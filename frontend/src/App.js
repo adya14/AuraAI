@@ -17,6 +17,7 @@ import linkedinIcon from "./images/linkedin.png";
 import instagramIcon from "./images/instagram.png";
 import AuthModal from './AuthModal';
 import ProfileModal from './profile';
+import InterviewDetails from './InterviewDetails';
 import axios from 'axios';
 
 function App() {
@@ -410,6 +411,7 @@ function App() {
         <Route path="/Scheduler" element={<Scheduler />} />
         <Route path="/privacyAndTerms" element={<LegalPages />} />
         <Route path="/refund-cancellation-policy" element={<LegalPages />} />
+        <Route path="/interview-details" element={<InterviewDetails />} />
       </Routes>
 
       {/* Back to Top Button */}
