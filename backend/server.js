@@ -21,6 +21,7 @@ const WebSocket = require('ws');
 // Create WebSocket server
 const server = require('http').createServer(app);
 const wss = new WebSocket.Server({ server, path: '/stream' });
+const fs = require('fs');
 
 // Conversation logger helper
 function logConversation(callSid, speaker, text) {
@@ -102,34 +103,51 @@ if (!global.interviewState) {
 const interviewState = global.interviewState;
 
 // WebSocket connection handler
-// WebSocket connection handler - Updated version
 wss.on('connection', (ws) => {
   console.log('\n=== NEW WEBSOCKET CONNECTION ===');
   let callSid = null;
   let audioBuffer = [];
   let isSpeaking = false;
   let silenceTimer = null;
-  const SPEECH_END_TIMEOUT = 1000; // 1 second silence = speech end
-  const MIN_AUDIO_LENGTH = 8000; // Minimum audio to process (~0.5s)
+  const SPEECH_END_TIMEOUT = 1000;
+  const MIN_AUDIO_LENGTH = 8000;
+
+  // Track connection health
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
 
   ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
-      callSid = data.start?.callSid || data.callSid || data.stop?.callSid;
       
-      if (data.event === 'media') {
+      // Properly handle call start/stop events
+      if (data.start) {
+        callSid = data.start.callSid;
+        ws.callSid = callSid; // Attach to WebSocket object
+        console.log(`[Call Started] ${callSid}`);
+        return;
+      }
+      
+      if (data.stop) {
+        console.log(`[Call Ended] ${callSid}`);
+        return ws.close();
+      }
+
+      // Only process media if we have a callSid
+      if (data.event === 'media' && callSid) {
         const audio = Buffer.from(data.media.payload, 'base64');
         
         if (!isSilentAudio(audio)) {
-          audioBuffer.push(audio);
+          audioBuffer.push({
+            timestamp: Date.now(),
+            data: audio
+          });
           
-          // Speech started
           if (!isSpeaking) {
             isSpeaking = true;
             console.log(`[Speech Start] ${callSid}`);
           }
 
-          // Reset silence timer
           if (silenceTimer) clearTimeout(silenceTimer);
           silenceTimer = setTimeout(async () => {
             if (isSpeaking) {
@@ -145,13 +163,19 @@ wss.on('connection', (ws) => {
     }
   });
 
+  // Handle connection close
+  ws.on('close', () => {
+    console.log(`[Connection Closed] ${callSid || 'unknown'}`);
+    if (silenceTimer) clearTimeout(silenceTimer);
+  });
+
   async function processUserSpeech() {
     if (!audioBuffer.length || !callSid) return;
     
     try {
-      const combinedAudio = Buffer.concat(audioBuffer);
+      audioBuffer.sort((a, b) => a.timestamp - b.timestamp);
+      const combinedAudio = Buffer.concat(audioBuffer.map(b => b.data));
       
-      // Skip if too short
       if (combinedAudio.length < MIN_AUDIO_LENGTH) {
         console.log(`[Too Short] Skipping ${combinedAudio.length} byte buffer`);
         audioBuffer = [];
@@ -159,14 +183,12 @@ wss.on('connection', (ws) => {
       }
 
       console.log(`[Processing] ${callSid} - ${combinedAudio.length} bytes`);
-      const transcription = await transcribeAudio(combinedAudio);
-      console.log(`[Transcript] ${callSid}:`, transcription);
+      const transcription = await transcribeAudio(combinedAudio, callSid);
       
       if (interviewState.has(callSid)) {
         const state = interviewState.get(callSid);
         state.conversationHistory.push({ role: "user", content: transcription });
         
-        // Get AI response
         const aiResponse = await getAiResponse(
           transcription,
           state.jobRole,
@@ -175,19 +197,16 @@ wss.on('connection', (ws) => {
           state.conversationHistory
         );
         
-        // Send response back through WebSocket
         ws.send(JSON.stringify({
           event: 'ai_response',
           text: aiResponse,
           callSid: callSid
         }));
-        
-        console.log(`[AI Response] ${callSid}:`, aiResponse);
       }
     } catch (error) {
       console.error(`[Processing Error] ${callSid}:`, error.message);
     } finally {
-      audioBuffer = []; // Clear buffer after processing
+      audioBuffer = [];
     }
   }
 });
@@ -273,7 +292,11 @@ app.post("/make-call", async (req, res) => {
             twiml: `
               <Response>
                 <Connect>
-                  <Stream url="wss://${process.env.BACKEND_URL}/stream"/>
+                  <Stream url="wss://${process.env.BACKEND_URL}/stream">
+                    <Parameter name="audioCodec" value="opus"/> 
+                    <Parameter name="audioSampleRate" value="16000"/>
+                    <Parameter name="enableTrack" value="inbound"/>
+                  </Stream>
                 </Connect>
               </Response>
             `

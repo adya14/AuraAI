@@ -12,24 +12,26 @@ if (!fs.existsSync(RECORDINGS_DIR)) {
   fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
 }
 
+const { convertAudio } = require('./audioProcessor');
+
 async function transcribeAudio(buffer, callSid) {
   try {
-    const wavBuffer = convertToWav(buffer);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${callSid}_${timestamp}.wav`;
+    // Convert audio first
+    const wavBuffer = await convertAudio(buffer);
+    
+    const filename = `${callSid}_${Date.now()}.wav`;
     const filepath = path.join(RECORDINGS_DIR, filename);
-
+    
     // Save recording
     fs.writeFileSync(filepath, wavBuffer);
-    console.log(`[Recording Saved] ${filepath}`);
-
-    // Transcribe using Whisper with higher accuracy settings
+    
+    // Transcribe
     const response = await openai.audio.transcriptions.create({
       file: fs.createReadStream(filepath),
       model: "whisper-1",
       response_format: "text",
-      temperature: 0.2,  // Lower temperature for more accurate results
-      language: "en"     // Explicitly set language if known
+      temperature: 0.2,
+      language: "en"
     });
 
     return response;
@@ -47,25 +49,49 @@ function toReadStream(blob) {
 }
 
 const convertToWav = (buffer) => {
-  const wavHeaderSize = 44;
-  const totalSize = buffer.length + wavHeaderSize - 8;
-  
-  const header = Buffer.alloc(wavHeaderSize);
-  header.write('RIFF', 0);
-  header.writeUInt32LE(totalSize, 4); 
-  header.write('WAVE', 8);
-  header.write('fmt ', 12);
-  header.writeUInt32LE(16, 16);
-  header.writeUInt16LE(1, 20);
-  header.writeUInt16LE(1, 22);
-  header.writeUInt32LE(8000, 24);
-  header.writeUInt32LE(8000 * 1 * 16/8, 28);
-  header.writeUInt16LE(1 * 16/8, 32);
-  header.writeUInt16LE(16, 34);
-  header.write('data', 36);
-  header.writeUInt32LE(buffer.length, 40);
-  
-  return Buffer.concat([header, buffer]);
+  try {
+    // First, try to determine the actual audio format from the buffer
+    // If buffer already has a WAV header, extract the parameters
+    if (buffer.toString('ascii', 0, 4) === 'RIFF' && 
+        buffer.toString('ascii', 8, 12) === 'WAVE') {
+      // It's already a WAV file, return as-is
+      return buffer;
+    }
+
+    // Default to Twilio's typical stream format if unknown:
+    // 8kHz, 16-bit, mono (µ-law PCM)
+    const sampleRate = 8000;
+    const channels = 1;
+    const bitDepth = 16;
+    const audioFormat = 1; // 1 = PCM
+
+    // Calculate required values
+    const byteRate = sampleRate * channels * (bitDepth / 8);
+    const blockAlign = channels * (bitDepth / 8);
+    const dataSize = buffer.length;
+
+    // Create WAV header
+    const header = Buffer.alloc(44);
+    header.write('RIFF', 0);
+    header.writeUInt32LE(36 + dataSize, 4); // File size - 8
+    header.write('WAVE', 8);
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16); // Subchunk1Size (16 for PCM)
+    header.writeUInt16LE(audioFormat, 20); // AudioFormat
+    header.writeUInt16LE(channels, 22); // NumChannels
+    header.writeUInt32LE(sampleRate, 24); // SampleRate
+    header.writeUInt32LE(byteRate, 28); // ByteRate
+    header.writeUInt16LE(blockAlign, 32); // BlockAlign
+    header.writeUInt16LE(bitDepth, 34); // BitsPerSample
+    header.write('data', 36);
+    header.writeUInt32LE(dataSize, 40); // Subchunk2Size
+
+    // Combine header and PCM data
+    return Buffer.concat([header, buffer]);
+  } catch (error) {
+    console.error('Error converting to WAV:', error);
+    throw new Error('Failed to convert audio to WAV format');
+  }
 };
 
 async function getAiResponse(text, role, jobDescription, requestRating = false, conversationHistory = []) {
