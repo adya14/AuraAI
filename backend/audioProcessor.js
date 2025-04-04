@@ -4,33 +4,29 @@ const path = require('path');
 const { tmpdir } = require('os');
 
 module.exports = {
-  convertAudio: (buffer, sampleRate = 16000) => {
-    const tempDir = path.join(tmpdir(), 'twilio_audio');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-    
-    const inputPath = path.join(tempDir, `input_${Date.now()}.ulaw`);
-    const outputPath = path.join(tempDir, `output_${Date.now()}.wav`);
-    
-    try {
-      // Save input file
-      fs.writeFileSync(inputPath, buffer);
+  convertAudio: function(buffer) {
+    return new Promise((resolve, reject) => {
+      const tempDir = fs.mkdtempSync(path.join(tmpdir(), 'twilio_'));
+      const inputPath = path.join(tempDir, 'input.ulaw');
+      const outputPath = path.join(tempDir, 'output.wav');
       
-      // Convert using SoX
-      execSync(
-        `"${process.env.SOX_PATH || 'sox'}" -t raw -r 8000 -e mu-law -c 1 "${inputPath}" -t wav "${outputPath}" rate -v ${sampleRate}`,
-        { stdio: 'ignore' }
-      );
-      
-      // Read converted file
-      const result = fs.readFileSync(outputPath);
-      return result;
-    } catch (error) {
-      throw new Error(`Audio conversion failed: ${error.message}`);
-    } finally {
-      // Cleanup
-      [inputPath, outputPath].forEach(file => {
-        try { fs.unlinkSync(file); } catch {}
-      });
-    }
+      try {
+        fs.writeFileSync(inputPath, buffer);
+        execSync(
+          `sox -t raw -r 8000 -e mu-law -c 1 "${inputPath}" -t wav "${outputPath}"`,
+          { timeout: 5000 }
+        );
+        const result = fs.readFileSync(outputPath);
+        resolve(result);
+      } catch (error) {
+        reject(new Error(`Audio conversion failed: ${error.message}`));
+      } finally {
+        try {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+        } catch (e) {
+          // Silent cleanup error
+        }
+      }
+    });
   }
 };
