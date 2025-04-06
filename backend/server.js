@@ -13,24 +13,11 @@ const { transcribeAudio, getAiResponse } = require('./interview');
 const { convertAudio } = require('./audioProcessor'); 
 const app = express();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
 const allowedOrigins = [
   "http://localhost:3000",
   "https://moon-ai-one.vercel.app"
 ];
-const WebSocket = require('ws');
-
-// Create WebSocket server
-const server = require('http').createServer(app);
-const wss = new WebSocket.Server({
-  server,
-  path: '/stream',
-  clientTracking: true,
-  perMessageDeflate: false,
-  maxPayload: 1024 * 1024,
-  verifyClient: (info, cb) => {
-    cb(true, 200, 'OK', { 'Connection': 'Upgrade' });
-  }
-});
 
 // Express Middleware
 app.use(express.json());
@@ -64,117 +51,33 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-app.post("/send-email", async (req, res) => {
-  const { name, email, message } = req.body;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: "adyatwr@gmail.com",
-    subject: "New Message from Moon AI Contact Form",
-    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: "Email sent successfully!" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to send email." });
-  }
-});
-
-wss.on('connection', (ws) => {
-  let callSid, processor;
-  let isProcessing = false; // Prevent overlapping processing
-
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      
-      if (data.event === 'start') {
-        callSid = data.start.callSid;
-        processor = {
-          buffer: [],
-          process: async () => {
-            if (isProcessing) return;
-            isProcessing = true;
-            
-            try {
-              const state = interviews.get(callSid);
-              if (!state?.audioBuffer?.length) return;
-
-              const wav = await convertAudio(Buffer.concat(state.audioBuffer));
-              const text = await transcribeAudio(wav, callSid);
-              state.history.push({ role: 'user', content: text });
-              state.audioBuffer = [];
-              await handleResponse(callSid, text);
-            } catch (error) {
-              console.error(`[${callSid}] Processing error:`, error);
-            } finally {
-              isProcessing = false;
-            }
-          }
-        };
-      }
-
-      if (data.event === 'media' && processor) {
-        const state = interviews.get(callSid);
-        if (state) {
-          state.audioBuffer.push(Buffer.from(data.media.payload, 'base64'));
-          setTimeout(processor.process, 5000);
-        }
-      }
-    } catch (error) {
-      console.error('WebSocket message error:', error);
-    }
-  });
-
-  ws.on('close', () => {
-    if (callSid) interviews.delete(callSid);
-  });
-
-  ws.on('error', (error) => {
-    console.error(`WebSocket error for ${callSid}:`, error);
-  });
-});
-
-// Make Call Endpoint
+// Handle call initiation
 app.post("/make-call", async (req, res) => {
-  const { jobRole, jobDescription, candidates, scheduledTime, email } = req.body;
+  const { jobRole, jobDescription, candidates } = req.body;
   
   try {
-    // Validate candidates array
     if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
       return res.status(400).json({ error: "Invalid candidates data" });
     }
 
-    // Process each candidate
     const results = [];
     for (const candidate of candidates) {
       try {
         console.log(`Initiating call to ${candidate.phone}`);
         
         const call = await client.calls.create({
-          to: candidate.phone, // Use candidate.phone instead of phoneNumber
+          to: candidate.phone,
           from: process.env.TWILIO_PHONE_NUMBER,
-          twiml: `
-            <Response>
-              <Start>
-                <Stream url="wss://${process.env.BACKEND_URL}/stream"/>
-              </Start>
-              <Say>Hello, please introduce yourself after the beep.</Say>
-              <Play digits="9"/>
-              <Pause length="5"/>
-            </Response>`
+          url: `https://${process.env.BACKEND_URL}/voice?jobRole=${encodeURIComponent(jobRole)}&jobDescription=${encodeURIComponent(jobDescription)}`
         });
 
-        // Initialize state for this call
         interviews.set(call.sid, {
           jobRole,
           jobDescription,
           history: [],
           phase: 'introduction',
-          audioBuffer: [],
-          candidatePhone: candidate.phone
+          candidatePhone: candidate.phone,
+          lastActivity: Date.now()
         });
 
         results.push({ success: true, callSid: call.sid, phone: candidate.phone });
@@ -185,7 +88,6 @@ app.post("/make-call", async (req, res) => {
     }
 
     res.json({ results });
-    
   } catch (error) {
     console.error("Global call error:", error);
     res.status(500).json({ 
@@ -195,82 +97,229 @@ app.post("/make-call", async (req, res) => {
   }
 });
 
-// Process response endpoint
-// In your handleResponse function
-async function handleResponse(callSid, userText) {
-  const state = interviews.get(callSid);
-  if (!state) return;
-
-  try {
-    const call = await client.calls(callSid).fetch();
-    if (call.status !== 'in-progress') return;
-
-    const twiml = new twilio.twiml.VoiceResponse();
-    
-    // Always maintain WebSocket
-    twiml.start().stream({ url: `wss://${process.env.BACKEND_URL}/stream` });
-
-    // Phase Management
-    switch (state.phase) {
-      case 'introduction':
-        state.phase = 'question1';
-        twiml.say(await getAiResponse("Ask first technical question", state.jobRole, state.jobDescription));
-        twiml.play({ digits: '9' });
-        break;
-
-      case 'question1':
-        state.phase = 'question2';
-        twiml.say(await getAiResponse("Ask second technical question", state.jobRole, state.jobDescription));
-        twiml.play({ digits: '9' });
-        break;
-
-      case 'question2':
-        state.phase = 'conclusion';
-        twiml.say("Do you have any questions for me?");
-        twiml.play({ digits: '9' });
-        break;
-
-      case 'conclusion':
-        // Only end call after conclusion response
-        twiml.say("Thank you for your time. Goodbye!");
-        twiml.hangup();
-        interviews.delete(callSid); // Cleanup
-        break;
-    }
-
-    await call.update({ twiml: twiml.toString() });
-  } catch (error) {
-    console.error(`[${callSid}] Error:`, error);
-    interviews.delete(callSid);
-  }
-}
-
-app.post('/stream-action', (req, res) => {
-  const twiml = new twilio.twiml.VoiceResponse();
-  logEvent(req.body.CallSid, 'stream_action_received', req.body);
-  res.type('text/xml').send(twiml.toString());
-});
-
-app.post('/process-recording', async (req, res) => {
+// Initial voice handler
+app.post('/voice', (req, res) => {
   const callSid = req.body.CallSid;
-  logEvent(callSid, 'fallback_recording_triggered');
+  const jobRole = req.query.jobRole;
+  const jobDescription = req.query.jobDescription;
   
   const twiml = new twilio.twiml.VoiceResponse();
-  twiml.say('Thank you for your response');
+  
+  // Greet the user and ask for introduction
+  const greeting = `Hello, this is an automated interview for the ${jobRole} position. Please introduce yourself after the beep.`;
+  console.log(`[${callSid}] AI: ${greeting}`);
+  
+  twiml.say(greeting);
+  twiml.play({ digits: '9' });
+  
+  // Record the user's introduction with 5 seconds of silence detection
+  twiml.record({
+    action: `/process-intro?callSid=${callSid}`,
+    maxLength: 60,
+    finishOnKey: '#',
+    playBeep: true,
+    timeout: 5
+  });
+  
   res.type('text/xml').send(twiml.toString());
 });
 
-// Fetch scheduled calls
-app.get("/scheduled-calls", async (req, res) => {
-  const { email } = req.query;
-
-  try {
-    const scheduledCalls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 });
-    res.status(200).json(scheduledCalls);
-  } catch (error) {
-    console.error(`Error fetching scheduled calls: ${error.message}`);
-    res.status(500).json({ error: "Failed to fetch scheduled calls", details: error.message });
+// Process introduction and ask first question
+app.post('/process-intro', async (req, res) => {
+  const callSid = req.query.callSid;
+  const recordingUrl = req.body.RecordingUrl;
+  const state = interviews.get(callSid);
+  
+  if (!state) {
+    return res.status(404).send('Call not found');
   }
+
+  // Store recording URL in state
+  state.recordingUrl = recordingUrl;
+  state.phase = 'question1';
+  
+  // Transcribe and log the introduction
+  try {
+    const audioBuffer = await downloadAudio(recordingUrl);
+    const wavBuffer = await convertAudio(audioBuffer);
+    const transcription = await transcribeAudio(wavBuffer, callSid);
+    console.log(`[${callSid}] User Introduction: ${transcription}`);
+    state.history.push({ role: 'user', content: transcription });
+  } catch (error) {
+    console.error(`[${callSid}] Error transcribing introduction:`, error);
+  }
+  
+  const twiml = new twilio.twiml.VoiceResponse();
+  
+  // Get AI response for first question
+  const aiResponse = await getAiResponse("Ask first technical question", state.jobRole, state.jobDescription);
+  console.log(`[${callSid}] AI Question 1: ${aiResponse}`);
+  state.history.push({ role: 'assistant', content: aiResponse });
+  
+  twiml.say(aiResponse);
+  twiml.play({ digits: '9' });
+  
+  // Record the user's answer
+  twiml.record({
+    action: `/process-answer1?callSid=${callSid}`,
+    maxLength: 120,
+    finishOnKey: '#',
+    playBeep: true,
+    timeout: 5
+  });
+  
+  res.type('text/xml').send(twiml.toString());
+});
+
+// Process first answer and ask second question
+app.post('/process-answer1', async (req, res) => {
+  const callSid = req.query.callSid;
+  const recordingUrl = req.body.RecordingUrl;
+  const state = interviews.get(callSid);
+  
+  if (!state) {
+    return res.status(404).send('Call not found');
+  }
+
+  // Store recording URL in state
+  state.answer1Url = recordingUrl;
+  state.phase = 'question2';
+  
+  // Transcribe and log the answer
+  try {
+    const transcription = await transcribeAudio(recordingUrl, callSid);
+    console.log(`[${callSid}] User Answer 1: ${transcription}`);
+    state.history.push({ role: 'user', content: transcription });
+  } catch (error) {
+    console.error(`[${callSid}] Error transcribing answer 1:`, error);
+  }
+  
+  const twiml = new twilio.twiml.VoiceResponse();
+  
+  // Get AI response for second question
+  const aiResponse = await getAiResponse("Ask second technical question", state.jobRole, state.jobDescription);
+  console.log(`[${callSid}] AI Question 2: ${aiResponse}`);
+  state.history.push({ role: 'assistant', content: aiResponse });
+  
+  twiml.say(aiResponse);
+  twiml.play({ digits: '9' });
+  
+  // Record the user's answer
+  twiml.record({
+    action: `/process-answer2?callSid=${callSid}`,
+    maxLength: 120,
+    finishOnKey: '#',
+    playBeep: true,
+    timeout: 5
+  });
+  
+  res.type('text/xml').send(twiml.toString());
+});
+
+// Process second answer and transition to Q&A
+app.post('/process-answer2', async (req, res) => {
+  const callSid = req.query.callSid;
+  const recordingUrl = req.body.RecordingUrl;
+  const state = interviews.get(callSid);
+  
+  if (!state) {
+    return res.status(404).send('Call not found');
+  }
+
+  // Store recording URL in state
+  state.answer2Url = recordingUrl;
+  state.phase = 'qna';
+  
+  // Transcribe and log the answer
+  try {
+    const transcription = await transcribeAudio(recordingUrl, callSid);
+    console.log(`[${callSid}] User Answer 2: ${transcription}`);
+    state.history.push({ role: 'user', content: transcription });
+  } catch (error) {
+    console.error(`[${callSid}] Error transcribing answer 2:`, error);
+  }
+  
+  const twiml = new twilio.twiml.VoiceResponse();
+  
+  // Transition to Q&A phase
+  const prompt = "Thank you for your answers! Do you have any questions for me? If yes, please ask after the beep. If not, just stay silent or press # to end the call.";
+  console.log(`[${callSid}] AI: ${prompt}`);
+  
+  twiml.say(prompt);
+  twiml.play({ digits: '9' });
+  
+  // Record the user's question or silence
+  twiml.record({
+    action: `/process-qna?callSid=${callSid}`,
+    maxLength: 60,
+    finishOnKey: '#',
+    playBeep: true,
+    timeout: 5
+  });
+  
+  res.type('text/xml').send(twiml.toString());
+});
+
+// Process Q&A interaction
+app.post('/process-qna', async (req, res) => {
+  const callSid = req.query.callSid;
+  const recordingUrl = req.body.RecordingUrl;
+  const digits = req.body.Digits;
+  const state = interviews.get(callSid);
+  
+  if (!state) {
+    return res.status(404).send('Call not found');
+  }
+
+  const twiml = new twilio.twiml.VoiceResponse();
+  
+  // Check if user pressed # or was silent (no questions)
+  if (digits === '#' || !recordingUrl) {
+    console.log(`[${callSid}] User had no questions, ending call`);
+    twiml.say("Thank you for your time! We will review your answers and get back to you soon. Goodbye!");
+    twiml.hangup();
+    interviews.delete(callSid);
+    return res.type('text/xml').send(twiml.toString());
+  }
+  
+  // Transcribe and log the user's question
+  try {
+    const question = await transcribeAudio(recordingUrl, callSid);
+    console.log(`[${callSid}] User Question: ${question}`);
+    state.history.push({ role: 'user', content: question });
+    
+    // Get AI response to the question
+    const aiResponse = await getAiResponse(`Answer this question: ${question}`, state.jobRole, state.jobDescription);
+    console.log(`[${callSid}] AI Answer: ${aiResponse}`);
+    state.history.push({ role: 'assistant', content: aiResponse });
+    
+    twiml.say(aiResponse);
+    twiml.play({ digits: '9' });
+    
+    // Ask if they have more questions
+    const followUp = "Do you have any other questions? If yes, please ask after the beep. If not, just stay silent or press # to end the call.";
+    console.log(`[${callSid}] AI: ${followUp}`);
+    
+    twiml.say(followUp);
+    twiml.play({ digits: '9' });
+    
+    // Record again
+    twiml.record({
+      action: `/process-qna?callSid=${callSid}`,
+      maxLength: 60,
+      finishOnKey: '#',
+      playBeep: true,
+      timeout: 5
+    });
+    
+  } catch (error) {
+    console.error(`[${callSid}] Error processing Q&A:`, error);
+    twiml.say("Sorry, I encountered an error. Thank you for your time! Goodbye!");
+    twiml.hangup();
+    interviews.delete(callSid);
+  }
+  
+  res.type('text/xml').send(twiml.toString());
 });
 
 // Handle preflight requests
@@ -278,6 +327,6 @@ app.options('*', cors());
 
 // Start the server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
