@@ -1,57 +1,77 @@
-const express = require('express');
-const twilio = require('twilio');
+// audioUtils.js
 require('dotenv').config();
+const axios = require('axios');
+const { OpenAI } = require('openai');
+const fs = require('fs');
+const path = require('path');
 
-const app = express();
-app.use(express.urlencoded({ extended: true }));
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Test endpoint to initiate call
-app.post('/initiate-call', (req, res) => {
-  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+/**
+ * Downloads and transcribes audio from Twilio URL
+ * @param {string} recordingUrl - Twilio recording URL
+ * @param {string} callSid - For logging/temp files
+ * @returns {Promise<string>} Transcription text
+ */
+async function transcribeRecording(recordingUrl, callSid, retries = 3, delayMs = 2000) {
+  const tempDir = path.join(__dirname, 'call_recordings');
   
-  client.calls.create({
-    to: req.body.toNumber,  // Your phone number
-    from: process.env.TWILIO_PHONE_NUMBER,
-    url: `https://${process.env.BACKEND_URL}/dtmf-twiml`
-  })
-  .then(call => {
-    res.json({ 
-      status: 'Call initiated', 
-      sid: call.sid 
+  try {
+    // 1. Create temp directory if needed
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+    // 2. Download with retry logic
+    let response;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[${callSid}] Download attempt ${attempt}/${retries}`);
+        response = await axios({
+          method: 'get',
+          url: recordingUrl,
+          responseType: 'stream',
+          auth: {
+            username: process.env.TWILIO_ACCOUNT_SID,
+            password: process.env.TWILIO_AUTH_TOKEN
+          },
+          timeout: 30000
+        });
+        break; // Success - exit retry loop
+      } catch (error) {
+        if (attempt === retries) throw error;
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+
+    // 3. Process the successful download
+    const tempFilePath = path.join(tempDir, `${callSid}_${Date.now()}.wav`);
+    await new Promise((resolve, reject) => {
+      response.data.pipe(fs.createWriteStream(tempFilePath))
+        .on('finish', resolve)
+        .on('error', reject);
     });
-  })
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  });
-});
 
-// TwiML for DTMF test
-app.post('/dtmf-twiml', (req, res) => {
-  const twiml = new twilio.twiml.VoiceResponse();
-  
-  twiml.say('Welcome to DTMF test. Press any key on your keypad.');
-  
-  twiml.gather({
-    input: 'dtmf',
-    timeout: 10,
-    numDigits: 1,
-    action: '/dtmf-handler'
-  });
+    // 4. Transcribe
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream(tempFilePath),
+      model: "whisper-1",
+      response_format: "text",
+      language: "en"
+    });
 
-  res.type('text/xml').send(twiml.toString());
-});
+    // 5. Cleanup
+    fs.unlink(tempFilePath, () => {});
+    return transcription;
 
-// Handle DTMF input
-app.post('/dtmf-handler', (req, res) => {
-  console.log('DTMF Received:', req.body.Digits);
-  
-  const twiml = new twilio.twiml.VoiceResponse();
-  twiml.say(`You pressed ${req.body.Digits}. Test successful. Goodbye.`);
-  res.type('text/xml').send(twiml.toString());
-});
+  } catch (error) {
+    // Final cleanup if error occurred mid-process
+    const files = fs.readdirSync(tempDir);
+    files.forEach(file => {
+      if (file.includes(callSid)) {
+        fs.unlink(path.join(tempDir, file), () => {});
+      }
+    });
+    throw error;
+  }
+}
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`DTMF Test Server running on port ${PORT}`);
-});
+module.exports = { transcribeRecording };

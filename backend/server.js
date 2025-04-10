@@ -9,11 +9,12 @@ const interviews = new Map();
 const ScheduledCall = require("./models/ScheduledCall");
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-const { transcribeAudio, getAiResponse } = require('./interview');
-const { convertAudio } = require('./audioProcessor'); 
+const {getAiResponse, transcribeRecording, generateFinalScore, getQnAResponse } = require('./interview');
+const path = require('path');
+const fs = require('fs');
 const app = express();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
+const axios = require('axios');
 const allowedOrigins = [
   "http://localhost:3000",
   "https://moon-ai-one.vercel.app"
@@ -106,7 +107,7 @@ app.post('/voice', (req, res) => {
   const twiml = new twilio.twiml.VoiceResponse();
   
   // Greet the user and ask for introduction
-  const greeting = `Hello, this is an automated interview for the ${jobRole} position. Please introduce yourself after the beep.`;
+  const greeting = `Hello, Please introduce yourself after the beep.`;
   console.log(`[${callSid}] AI: ${greeting}`);
   
   twiml.say(greeting);
@@ -124,7 +125,10 @@ app.post('/voice', (req, res) => {
   res.type('text/xml').send(twiml.toString());
 });
 
-// Process introduction and ask first question
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.post('/process-intro', async (req, res) => {
   const callSid = req.query.callSid;
   const recordingUrl = req.body.RecordingUrl;
@@ -140,10 +144,8 @@ app.post('/process-intro', async (req, res) => {
   
   // Transcribe and log the introduction
   try {
-    const audioBuffer = await downloadAudio(recordingUrl);
-    const wavBuffer = await convertAudio(audioBuffer);
-    const transcription = await transcribeAudio(wavBuffer, callSid);
-    console.log(`[${callSid}] User Introduction: ${transcription}`);
+    const transcription = await transcribeRecording(recordingUrl, callSid);
+    console.log(`[${callSid}] Transcription:\n${transcription}`);
     state.history.push({ role: 'user', content: transcription });
   } catch (error) {
     console.error(`[${callSid}] Error transcribing introduction:`, error);
@@ -187,7 +189,7 @@ app.post('/process-answer1', async (req, res) => {
   
   // Transcribe and log the answer
   try {
-    const transcription = await transcribeAudio(recordingUrl, callSid);
+    const transcription = await transcribeRecording(recordingUrl, callSid);
     console.log(`[${callSid}] User Answer 1: ${transcription}`);
     state.history.push({ role: 'user', content: transcription });
   } catch (error) {
@@ -232,7 +234,7 @@ app.post('/process-answer2', async (req, res) => {
   
   // Transcribe and log the answer
   try {
-    const transcription = await transcribeAudio(recordingUrl, callSid);
+    const transcription = await transcribeRecording(recordingUrl, callSid);
     console.log(`[${callSid}] User Answer 2: ${transcription}`);
     state.history.push({ role: 'user', content: transcription });
   } catch (error) {
@@ -278,49 +280,72 @@ app.post('/process-qna', async (req, res) => {
     console.log(`[${callSid}] User had no questions, ending call`);
     twiml.say("Thank you for your time! We will review your answers and get back to you soon. Goodbye!");
     twiml.hangup();
-    interviews.delete(callSid);
+    await endInterview(callSid);
     return res.type('text/xml').send(twiml.toString());
   }
   
-  // Transcribe and log the user's question
+  // Process user's question
   try {
-    const question = await transcribeAudio(recordingUrl, callSid);
+    const question = await transcribeRecording(recordingUrl, callSid);
     console.log(`[${callSid}] User Question: ${question}`);
     state.history.push({ role: 'user', content: question });
     
-    // Get AI response to the question
-    const aiResponse = await getAiResponse(`Answer this question: ${question}`, state.jobRole, state.jobDescription);
+    // Get direct answer without additional prompts
+    const aiResponse = await getQnAResponse(question, state.history);
     console.log(`[${callSid}] AI Answer: ${aiResponse}`);
     state.history.push({ role: 'assistant', content: aiResponse });
     
-    twiml.say(aiResponse);
-    twiml.play({ digits: '9' });
+    // Combine answer with goodbye message and end call
+    twiml.say(`${aiResponse} Thank you for your time! We will review your answers and get back to you soon. Goodbye!`);
+    twiml.hangup();
     
-    // Ask if they have more questions
-    const followUp = "Do you have any other questions? If yes, please ask after the beep. If not, just stay silent or press # to end the call.";
-    console.log(`[${callSid}] AI: ${followUp}`);
-    
-    twiml.say(followUp);
-    twiml.play({ digits: '9' });
-    
-    // Record again
-    twiml.record({
-      action: `/process-qna?callSid=${callSid}`,
-      maxLength: 60,
-      finishOnKey: '#',
-      playBeep: true,
-      timeout: 5
-    });
+    // Generate final score and clean up
+    await endInterview(callSid);
     
   } catch (error) {
     console.error(`[${callSid}] Error processing Q&A:`, error);
-    twiml.say("Sorry, I encountered an error. Thank you for your time! Goodbye!");
+    twiml.say("Thank you for your time! We will review your answers and get back to you soon. Goodbye!");
     twiml.hangup();
-    interviews.delete(callSid);
+    await endInterview(callSid);
   }
   
   res.type('text/xml').send(twiml.toString());
 });
+
+async function endInterview(callSid) {
+  const state = interviews.get(callSid);
+  if (!state) return;
+
+  try {
+    const score = await generateFinalScore(
+      state.history,
+      state.jobRole,
+      state.jobDescription
+    );
+
+    console.log('\n=== INTERVIEW SCORE ===');
+    console.log(`Technical Score: ${score.technicalScore}/10`);
+    console.log(`Communication Score: ${score.communicationScore}/10`);
+    console.log(`Completion Status: ${score.completionStatus}`);
+    console.log(`Justification: ${score.justification}`);
+    console.log('=======================');
+
+    // Print detailed breakdown if available
+    if (score.breakdown) {
+      console.log('\nQuestion-by-Question Breakdown:');
+      score.breakdown.forEach((item, index) => {
+        console.log(`\nQ${index + 1}: ${item.question}`);
+        console.log(`Technical: ${item.technicalAssessment}`);
+        console.log(`Communication: ${item.communicationAssessment}`);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to generate score:', error);
+  } finally {
+    interviews.delete(callSid);
+  }
+}
+
 
 // Handle preflight requests
 app.options('*', cors());

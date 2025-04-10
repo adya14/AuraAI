@@ -7,6 +7,39 @@ function getInterviewPrompt(role, jobDescription) {
   ];
 }
 
-module.exports = {
-  getInterviewPrompt
-};
+// prompt.js
+function getScoringPrompt() {
+  return {
+    role: "system",
+    content: `Evaluate the candidate based on:
+    1. Technical Knowledge (0-10):
+       - Relevance to job role
+       - Depth of technical understanding
+       - Accuracy of answers
+    2. Communication Skills (0-10):
+       - Clarity of expression
+       - Fluency in responses
+       - Professional tone
+    
+    Additional factors:
+    - Interview completion (deduct points if ended abruptly)
+    - Response quality to all questions
+    
+    Provide JSON output with:
+    {
+      "technicalScore": number,
+      "communicationScore": number,
+      "justification": string,
+      "completionStatus": "complete"|"partial"|"abrupt",
+      "breakdown": [
+        {
+          "question": string,
+          "technicalAssessment": string,
+          "communicationAssessment": string
+        }
+      ]
+    }`
+  };
+}
+
+module.exports = { getInterviewPrompt, getScoringPrompt };
