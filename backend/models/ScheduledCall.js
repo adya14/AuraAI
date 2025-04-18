@@ -8,7 +8,17 @@ const ScheduledCallSchema = new mongoose.Schema({
     {
       name: { type: String, required: true },
       phone: { type: String, required: true },
-    },
+      score: { type: Number },                      
+      scoreJustification: { type: String },         
+      scoreBreakdown: [                             
+        {
+          category: String,
+          score: Number,
+          comment: String
+        }
+      ],
+      transcript: { type: String }                  
+    }
   ],
   scheduledTime: { type: Date, required: true },
   email: { type: String, required: true }, 

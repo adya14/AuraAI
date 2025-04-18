@@ -317,34 +317,55 @@ async function endInterview(callSid) {
   if (!state) return;
 
   try {
+    // Generate score
     const score = await generateFinalScore(
       state.history,
       state.jobRole,
       state.jobDescription
     );
 
-    console.log('\n=== INTERVIEW SCORE ===');
-    console.log(`Technical Score: ${score.technicalScore}/10`);
-    console.log(`Communication Score: ${score.communicationScore}/10`);
-    console.log(`Completion Status: ${score.completionStatus}`);
-    console.log(`Justification: ${score.justification}`);
-    console.log('=======================');
+    // Update the scheduled call with scores
+    await ScheduledCall.findOneAndUpdate(
+      { "candidates.phone": state.candidatePhone },
+      {
+        $set: {
+          "candidates.$.score": score.technicalScore,
+          "candidates.$.scoreJustification": score.justification,
+          "candidates.$.scoreBreakdown": score.breakdown,
+          "candidates.$.transcript": state.history
+            .map(entry => `${entry.role}: ${entry.content}`)
+            .join('\n\n')
+        }
+      }
+    );
 
-    // Print detailed breakdown if available
-    if (score.breakdown) {
-      console.log('\nQuestion-by-Question Breakdown:');
-      score.breakdown.forEach((item, index) => {
-        console.log(`\nQ${index + 1}: ${item.question}`);
-        console.log(`Technical: ${item.technicalAssessment}`);
-        console.log(`Communication: ${item.communicationAssessment}`);
-      });
-    }
+    console.log(`Saved scores for call ${callSid}`);
   } catch (error) {
-    console.error('Failed to generate score:', error);
+    console.error('Failed to save scores:', error);
   } finally {
     interviews.delete(callSid);
   }
 }
+
+app.post('/call-status', (req, res) => {
+  console.log('Call status update:', req.body.CallStatus, 'for call SID:', req.body.CallSid);
+  res.status(200).send(); // Immediate empty response
+});
+
+app.get("/scheduled-calls", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: "Missing email parameter" });
+    }
+
+    const calls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 });
+    res.json(calls);
+  } catch (error) {
+    console.error("Error fetching scheduled calls:", error);
+    res.status(500).json({ error: "Failed to fetch scheduled calls" });
+  }
+});
 
 
 // Handle preflight requests

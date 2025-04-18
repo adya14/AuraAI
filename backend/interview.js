@@ -73,7 +73,7 @@ async function transcribeRecording(recordingUrl, callSid, retries = 3, delayMs =
   }
 }
 
-async function getAiResponse(text, role, jobDescription, conversationHistory = []) {
+async function getAiResponse(text, role, jobDescription, requestRating, conversationHistory = []) {
   try {
     const messages = getInterviewPrompt(role, jobDescription);
 
@@ -145,21 +145,36 @@ async function getQnAResponse(question, conversationHistory = []) {
 async function generateFinalScore(conversationHistory, role, jobDescription) {
   try {
     const messages = [
-      getScoringPrompt(),
-      { 
+      {
         role: "system",
-        content: `Job Role: ${role}\nJob Description: ${jobDescription}`
+        content: `You are an interview scoring system. Evaluate the candidate based on:
+        - Technical Knowledge (0-10)
+        - Communication Skills (0-10)
+        
+        Return your evaluation in this EXACT JSON format:
+        {
+          "technicalScore": number,
+          "communicationScore": number,
+          "justification": string,
+          "completionStatus": "complete"|"partial"|"abrupt"
+        }
+        
+        Job Role: ${role}
+        Job Description: ${jobDescription}`
       },
       ...conversationHistory
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4", // or "gpt-4-1106-preview" if you need JSON mode
       messages,
-      response_format: { type: "json_object" }
+      temperature: 0.2 // Lower temperature for more consistent scoring
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    // Extract JSON from the response
+    const jsonString = response.choices[0].message.content;
+    return JSON.parse(jsonString);
+    
   } catch (error) {
     console.error("Error generating final score:", error);
     return {
