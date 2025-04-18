@@ -95,7 +95,7 @@ const Scheduler = () => {
       };
 
       // Make API call
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/make-call`, data);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/schedule-call`, data);
 
       // Refresh plan data
       const planResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/user-plan`, {

@@ -54,13 +54,37 @@ const transporter = nodemailer.createTransport({
 
 // Handle call initiation
 app.post("/make-call", async (req, res) => {
-  const { jobRole, jobDescription, candidates } = req.body;
+  const { jobRole, jobDescription, candidates, email } = req.body;
   
   try {
-    if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
-      return res.status(400).json({ error: "Invalid candidates data" });
+    // 1. Validate input
+    if (!jobRole || !jobDescription || !candidates || !Array.isArray(candidates)) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // 2. Update user's call counts
+    if (email) {
+      const user = await User.findOneAndUpdate(
+        { email },
+        { 
+          $inc: { 
+            usedCalls: candidates.length,
+            totalCallsTillDate: candidates.length 
+          } 
+        },
+        { new: true }
+      );
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      if (user.usedCalls > user.totalCalls) {
+        return res.status(400).json({ error: "Call limit exceeded" });
+      }
+    }
+
+    // 3. Initiate calls
     const results = [];
     for (const candidate of candidates) {
       try {
@@ -72,29 +96,123 @@ app.post("/make-call", async (req, res) => {
           url: `https://${process.env.BACKEND_URL}/voice?jobRole=${encodeURIComponent(jobRole)}&jobDescription=${encodeURIComponent(jobDescription)}`
         });
 
+        // Store call state
         interviews.set(call.sid, {
           jobRole,
           jobDescription,
           history: [],
           phase: 'introduction',
           candidatePhone: candidate.phone,
-          lastActivity: Date.now()
+          lastActivity: Date.now(),
+          email // Store email for later reference
         });
 
-        results.push({ success: true, callSid: call.sid, phone: candidate.phone });
+        results.push({ 
+          success: true, 
+          callSid: call.sid, 
+          phone: candidate.phone 
+        });
       } catch (error) {
         console.error(`Failed to call ${candidate.phone}:`, error);
-        results.push({ success: false, phone: candidate.phone, error: error.message });
+        results.push({ 
+          success: false, 
+          phone: candidate.phone, 
+          error: error.message 
+        });
       }
     }
 
-    res.json({ results });
+    // 4. Return results
+    res.json({ 
+      success: true,
+      results,
+      message: `Initiated ${results.filter(r => r.success).length} of ${candidates.length} calls`
+    });
+
   } catch (error) {
-    console.error("Global call error:", error);
+    console.error("Call processing error:", error);
     res.status(500).json({ 
       error: "Call processing failed",
       details: process.env.NODE_ENV === 'development' ? error.message : null
     });
+  }
+});
+
+// Add near the top with other requires
+const cron = require('node-cron');
+
+// Add this endpoint for scheduling calls
+app.post('/schedule-call', async (req, res) => {
+  try {
+    const { email, jobRole, jobDescription, candidates, scheduledTime } = req.body;
+    
+    // Validate scheduled time is in the future
+    if (new Date(scheduledTime) <= new Date()) {
+      return res.status(400).json({ error: "Scheduled time must be in the future" });
+    }
+
+    const scheduledCall = new ScheduledCall({
+      email,
+      jobRole,
+      jobDescription,
+      candidates,
+      scheduledTime,
+      status: 'scheduled'
+    });
+
+    await scheduledCall.save();
+    res.status(201).json(scheduledCall);
+
+  } catch (error) {
+    console.error("Error scheduling call:", error);
+    res.status(500).json({ error: "Failed to schedule call" });
+  }
+});
+
+// Add this background job to check for calls to initiate
+cron.schedule('* * * * *', async () => { // Runs every minute
+  try {
+    const now = new Date();
+    const callsToInitiate = await ScheduledCall.find({
+      scheduledTime: { $lte: now },
+      status: 'scheduled'
+    }).limit(5); // Process 5 at a time
+
+    for (const call of callsToInitiate) {
+      try {
+        // Update status to 'processing'
+        await ScheduledCall.updateOne(
+          { _id: call._id },
+          { $set: { status: 'processing' } }
+        );
+
+        // Initiate the call
+        const response = await axios.post(
+          `http://localhost:5000/make-call`,
+          {
+            jobRole: call.jobRole,
+            jobDescription: call.jobDescription,
+            candidates: call.candidates,
+            email: call.email
+          }
+        );
+
+        // Update status to 'completed'
+        await ScheduledCall.updateOne(
+          { _id: call._id },
+          { $set: { status: 'completed' } }
+        );
+
+      } catch (error) {
+        console.error(`Failed to initiate scheduled call ${call._id}:`, error);
+        await ScheduledCall.updateOne(
+          { _id: call._id },
+          { $set: { status: 'failed' } }
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error in call initiation cron job:", error);
   }
 });
 

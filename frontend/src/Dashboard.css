@@ -290,3 +290,44 @@
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Add these styles */
+.status-completed {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.status-no-answer {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.status-busy {
+  color: #9c27b0;
+  font-weight: bold;
+}
+
+.status-failed {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.details-button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.details-button:hover {
+  background-color: #0b7dda;
+}
+
+.no-calls {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
