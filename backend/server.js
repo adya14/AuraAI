@@ -9,7 +9,7 @@ const interviews = new Map();
 const ScheduledCall = require("./models/ScheduledCall");
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-const {getAiResponse, transcribeRecording, generateFinalScore, getQnAResponse } = require('./interview');
+const { getAiResponse, transcribeRecording, generateFinalScore, getQnAResponse } = require('./interview');
 const path = require('path');
 const fs = require('fs');
 const app = express();
@@ -55,7 +55,7 @@ const transporter = nodemailer.createTransport({
 // Handle call initiation
 app.post("/make-call", async (req, res) => {
   const { jobRole, jobDescription, candidates, email } = req.body;
-  
+
   try {
     // 1. Validate input
     if (!jobRole || !jobDescription || !candidates || !Array.isArray(candidates)) {
@@ -66,19 +66,19 @@ app.post("/make-call", async (req, res) => {
     if (email) {
       const user = await User.findOneAndUpdate(
         { email },
-        { 
-          $inc: { 
+        {
+          $inc: {
             usedCalls: candidates.length,
-            totalCallsTillDate: candidates.length 
-          } 
+            totalCallsTillDate: candidates.length
+          }
         },
         { new: true }
       );
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      
+
       if (user.usedCalls > user.totalCalls) {
         return res.status(400).json({ error: "Call limit exceeded" });
       }
@@ -89,11 +89,15 @@ app.post("/make-call", async (req, res) => {
     for (const candidate of candidates) {
       try {
         console.log(`Initiating call to ${candidate.phone}`);
-        
+
+        // In the /make-call endpoint, modify the call creation:
         const call = await client.calls.create({
           to: candidate.phone,
           from: process.env.TWILIO_PHONE_NUMBER,
-          url: `https://${process.env.BACKEND_URL}/voice?jobRole=${encodeURIComponent(jobRole)}&jobDescription=${encodeURIComponent(jobDescription)}`
+          url: `https://${process.env.BACKEND_URL}/voice?jobRole=${encodeURIComponent(jobRole)}&jobDescription=${encodeURIComponent(jobDescription)}`,
+          statusCallback: `https://${process.env.BACKEND_URL}/call-status`,
+          statusCallbackEvent: ['completed', 'failed', 'busy', 'no-answer'],
+          statusCallbackMethod: 'POST'
         });
 
         // Store call state
@@ -107,23 +111,23 @@ app.post("/make-call", async (req, res) => {
           email // Store email for later reference
         });
 
-        results.push({ 
-          success: true, 
-          callSid: call.sid, 
-          phone: candidate.phone 
+        results.push({
+          success: true,
+          callSid: call.sid,
+          phone: candidate.phone
         });
       } catch (error) {
         console.error(`Failed to call ${candidate.phone}:`, error);
-        results.push({ 
-          success: false, 
-          phone: candidate.phone, 
-          error: error.message 
+        results.push({
+          success: false,
+          phone: candidate.phone,
+          error: error.message
         });
       }
     }
 
     // 4. Return results
-    res.json({ 
+    res.json({
       success: true,
       results,
       message: `Initiated ${results.filter(r => r.success).length} of ${candidates.length} calls`
@@ -131,7 +135,7 @@ app.post("/make-call", async (req, res) => {
 
   } catch (error) {
     console.error("Call processing error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Call processing failed",
       details: process.env.NODE_ENV === 'development' ? error.message : null
     });
@@ -145,7 +149,7 @@ const cron = require('node-cron');
 app.post('/schedule-call', async (req, res) => {
   try {
     const { email, jobRole, jobDescription, candidates, scheduledTime } = req.body;
-    
+
     // Validate scheduled time is in the future
     if (new Date(scheduledTime) <= new Date()) {
       return res.status(400).json({ error: "Scheduled time must be in the future" });
@@ -221,16 +225,16 @@ app.post('/voice', (req, res) => {
   const callSid = req.body.CallSid;
   const jobRole = req.query.jobRole;
   const jobDescription = req.query.jobDescription;
-  
+
   const twiml = new twilio.twiml.VoiceResponse();
-  
+
   // Greet the user and ask for introduction
   const greeting = `Hello, Please introduce yourself after the beep.`;
   console.log(`[${callSid}] AI: ${greeting}`);
-  
+
   twiml.say(greeting);
   twiml.play({ digits: '9' });
-  
+
   // Record the user's introduction with 5 seconds of silence detection
   twiml.record({
     action: `/process-intro?callSid=${callSid}`,
@@ -239,7 +243,7 @@ app.post('/voice', (req, res) => {
     playBeep: true,
     timeout: 5
   });
-  
+
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -251,7 +255,15 @@ app.post('/process-intro', async (req, res) => {
   const callSid = req.query.callSid;
   const recordingUrl = req.body.RecordingUrl;
   const state = interviews.get(callSid);
-  
+  if (req.body.Digits === '#') {
+    console.log('User pressed # to end call');
+    await endInterview(req.body.CallSid);
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say('Thank you for your time. Goodbye.');
+    twiml.hangup();
+    return res.type('text/xml').send(twiml.toString());
+  }
+
   if (!state) {
     return res.status(404).send('Call not found');
   }
@@ -259,7 +271,7 @@ app.post('/process-intro', async (req, res) => {
   // Store recording URL in state
   state.recordingUrl = recordingUrl;
   state.phase = 'question1';
-  
+
   // Transcribe and log the introduction
   try {
     const transcription = await transcribeRecording(recordingUrl, callSid);
@@ -268,17 +280,17 @@ app.post('/process-intro', async (req, res) => {
   } catch (error) {
     console.error(`[${callSid}] Error transcribing introduction:`, error);
   }
-  
+
   const twiml = new twilio.twiml.VoiceResponse();
-  
+
   // Get AI response for first question
   const aiResponse = await getAiResponse("Ask first technical question", state.jobRole, state.jobDescription);
   console.log(`[${callSid}] AI Question 1: ${aiResponse}`);
   state.history.push({ role: 'assistant', content: aiResponse });
-  
+
   twiml.say(aiResponse);
   twiml.play({ digits: '9' });
-  
+
   // Record the user's answer
   twiml.record({
     action: `/process-answer1?callSid=${callSid}`,
@@ -287,7 +299,7 @@ app.post('/process-intro', async (req, res) => {
     playBeep: true,
     timeout: 5
   });
-  
+
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -296,7 +308,15 @@ app.post('/process-answer1', async (req, res) => {
   const callSid = req.query.callSid;
   const recordingUrl = req.body.RecordingUrl;
   const state = interviews.get(callSid);
-  
+  if (req.body.Digits === '#') {
+    console.log('User pressed # to end call');
+    await endInterview(req.body.CallSid);
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say('Thank you for your time. Goodbye.');
+    twiml.hangup();
+    return res.type('text/xml').send(twiml.toString());
+  }
+
   if (!state) {
     return res.status(404).send('Call not found');
   }
@@ -304,7 +324,7 @@ app.post('/process-answer1', async (req, res) => {
   // Store recording URL in state
   state.answer1Url = recordingUrl;
   state.phase = 'question2';
-  
+
   // Transcribe and log the answer
   try {
     const transcription = await transcribeRecording(recordingUrl, callSid);
@@ -313,17 +333,17 @@ app.post('/process-answer1', async (req, res) => {
   } catch (error) {
     console.error(`[${callSid}] Error transcribing answer 1:`, error);
   }
-  
+
   const twiml = new twilio.twiml.VoiceResponse();
-  
+
   // Get AI response for second question
   const aiResponse = await getAiResponse("Ask second technical question", state.jobRole, state.jobDescription);
   console.log(`[${callSid}] AI Question 2: ${aiResponse}`);
   state.history.push({ role: 'assistant', content: aiResponse });
-  
+
   twiml.say(aiResponse);
   twiml.play({ digits: '9' });
-  
+
   // Record the user's answer
   twiml.record({
     action: `/process-answer2?callSid=${callSid}`,
@@ -332,7 +352,7 @@ app.post('/process-answer1', async (req, res) => {
     playBeep: true,
     timeout: 5
   });
-  
+
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -341,7 +361,15 @@ app.post('/process-answer2', async (req, res) => {
   const callSid = req.query.callSid;
   const recordingUrl = req.body.RecordingUrl;
   const state = interviews.get(callSid);
-  
+  if (req.body.Digits === '#') {
+    console.log('User pressed # to end call');
+    await endInterview(req.body.CallSid);
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say('Thank you for your time. Goodbye.');
+    twiml.hangup();
+    return res.type('text/xml').send(twiml.toString());
+  }
+
   if (!state) {
     return res.status(404).send('Call not found');
   }
@@ -349,7 +377,7 @@ app.post('/process-answer2', async (req, res) => {
   // Store recording URL in state
   state.answer2Url = recordingUrl;
   state.phase = 'qna';
-  
+
   // Transcribe and log the answer
   try {
     const transcription = await transcribeRecording(recordingUrl, callSid);
@@ -358,16 +386,16 @@ app.post('/process-answer2', async (req, res) => {
   } catch (error) {
     console.error(`[${callSid}] Error transcribing answer 2:`, error);
   }
-  
+
   const twiml = new twilio.twiml.VoiceResponse();
-  
+
   // Transition to Q&A phase
   const prompt = "Thank you for your answers! Do you have any questions for me? If yes, please ask after the beep. If not, just stay silent or press # to end the call.";
   console.log(`[${callSid}] AI: ${prompt}`);
-  
+
   twiml.say(prompt);
   twiml.play({ digits: '9' });
-  
+
   // Record the user's question or silence
   twiml.record({
     action: `/process-qna?callSid=${callSid}`,
@@ -376,7 +404,7 @@ app.post('/process-answer2', async (req, res) => {
     playBeep: true,
     timeout: 5
   });
-  
+
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -386,13 +414,21 @@ app.post('/process-qna', async (req, res) => {
   const recordingUrl = req.body.RecordingUrl;
   const digits = req.body.Digits;
   const state = interviews.get(callSid);
-  
+  if (req.body.Digits === '#') {
+    console.log('User pressed # to end call');
+    await endInterview(req.body.CallSid);
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say('Thank you for your time. Goodbye.');
+    twiml.hangup();
+    return res.type('text/xml').send(twiml.toString());
+  }
+
   if (!state) {
     return res.status(404).send('Call not found');
   }
 
   const twiml = new twilio.twiml.VoiceResponse();
-  
+
   // Check if user pressed # or was silent (no questions)
   if (digits === '#' || !recordingUrl) {
     console.log(`[${callSid}] User had no questions, ending call`);
@@ -401,32 +437,32 @@ app.post('/process-qna', async (req, res) => {
     await endInterview(callSid);
     return res.type('text/xml').send(twiml.toString());
   }
-  
+
   // Process user's question
   try {
     const question = await transcribeRecording(recordingUrl, callSid);
     console.log(`[${callSid}] User Question: ${question}`);
     state.history.push({ role: 'user', content: question });
-    
+
     // Get direct answer without additional prompts
     const aiResponse = await getQnAResponse(question, state.history);
     console.log(`[${callSid}] AI Answer: ${aiResponse}`);
     state.history.push({ role: 'assistant', content: aiResponse });
-    
+
     // Combine answer with goodbye message and end call
     twiml.say(`${aiResponse} Thank you for your time! We will review your answers and get back to you soon. Goodbye!`);
     twiml.hangup();
-    
+
     // Generate final score and clean up
     await endInterview(callSid);
-    
+
   } catch (error) {
     console.error(`[${callSid}] Error processing Q&A:`, error);
     twiml.say("Thank you for your time! We will review your answers and get back to you soon. Goodbye!");
     twiml.hangup();
     await endInterview(callSid);
   }
-  
+
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -435,50 +471,85 @@ async function endInterview(callSid) {
   if (!state) return;
 
   try {
-    // Generate score
     const score = await generateFinalScore(
       state.history,
       state.jobRole,
       state.jobDescription
     );
 
-    // Update the scheduled call with scores
+    // Format transcript
+    const formattedTranscript = state.history
+      .map(entry => `${entry.role}: ${entry.content}`)
+      .join('\n\n');
+
+    // Update database with ALL score data
     await ScheduledCall.findOneAndUpdate(
       { "candidates.phone": state.candidatePhone },
       {
         $set: {
-          "candidates.$.score": score.technicalScore,
+          "candidates.$.score": score.technicalScore, // Overall score
+          "candidates.$.technicalScore": score.technicalScore,
+          "candidates.$.communicationScore": score.communicationScore,
           "candidates.$.scoreJustification": score.justification,
           "candidates.$.scoreBreakdown": score.breakdown,
-          "candidates.$.transcript": state.history
-            .map(entry => `${entry.role}: ${entry.content}`)
-            .join('\n\n')
+          "candidates.$.completionStatus": score.completionStatus,
+          "candidates.$.transcript": formattedTranscript,
+          "candidates.$.status": "completed"
         }
       }
     );
-
-    console.log(`Saved scores for call ${callSid}`);
   } catch (error) {
-    console.error('Failed to save scores:', error);
+    console.error('Error saving interview results:', error);
   } finally {
     interviews.delete(callSid);
   }
 }
 
-app.post('/call-status', (req, res) => {
-  console.log('Call status update:', req.body.CallStatus, 'for call SID:', req.body.CallSid);
-  res.status(200).send(); // Immediate empty response
+// Update the call-status endpoint
+app.post('/call-status', async (req, res) => {
+  const { CallSid, CallStatus } = req.body;
+  console.log(`Call ended: ${CallSid} - ${CallStatus}`);
+
+  try {
+    const state = interviews.get(CallSid);
+    if (state && state.history?.length > 0) {
+      const score = await generateFinalScore(state.history, state.jobRole, state.jobDescription);
+      console.log("Generated score:", score);
+      
+      // Update database
+      await ScheduledCall.findOneAndUpdate(
+        { "candidates.phone": state.candidatePhone },
+        { $set: { "candidates.$.score": score.technicalScore } }
+      );
+    }
+  } catch (error) {
+    console.error("Scoring error:", error);
+  } finally {
+    interviews.delete(CallSid);
+    res.status(200).send();
+  }
 });
 
 app.get("/scheduled-calls", async (req, res) => {
   try {
     const { email } = req.query;
-    if (!email) {
-      return res.status(400).json({ error: "Missing email parameter" });
-    }
-
     const calls = await ScheduledCall.find({ email }).sort({ scheduledTime: -1 });
-    res.json(calls);
+    
+    // Ensure all score fields are included in the response
+    const response = calls.map(call => ({
+      ...call.toObject(),
+      candidates: call.candidates.map(candidate => ({
+        ...candidate.toObject(),
+        // Ensure these fields are always present
+        technicalScore: candidate.technicalScore || null,
+        communicationScore: candidate.communicationScore || null,
+        scoreJustification: candidate.scoreJustification || null,
+        scoreBreakdown: candidate.scoreBreakdown || [],
+        completionStatus: candidate.completionStatus || 'complete'
+      }))
+    }));
+    
+    res.json(response);
   } catch (error) {
     console.error("Error fetching scheduled calls:", error);
     res.status(500).json({ error: "Failed to fetch scheduled calls" });

@@ -83,25 +83,6 @@ async function getAiResponse(text, role, jobDescription, requestRating, conversa
 
     messages.push({ role: "user", content: text });
 
-    // if (requestRating) {
-    //   messages.push({
-    //     role: "system",
-    //     content: `Generate a JSON rating object with these fields:
-    //     - score (1-10)
-    //     - justification (string)
-    //     - breakdown (array of {category, score, comment})
-        
-    //     Example response:
-    //     {
-    //       "score": 7,
-    //       "justification": "Candidate showed good technical skills but lacked depth in...",
-    //       "breakdown": [
-    //         {"score": 8, "comment": "Strong fundamentals..."},
-    //       ]
-    //     }`
-    //   });
-    // }
-
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages,
@@ -142,45 +123,42 @@ async function getQnAResponse(question, conversationHistory = []) {
   }
 }
 
+// Update generateFinalScore function
 async function generateFinalScore(conversationHistory, role, jobDescription) {
   try {
     const messages = [
       {
         role: "system",
-        content: `You are an interview scoring system. Evaluate the candidate based on:
-        - Technical Knowledge (0-10)
-        - Communication Skills (0-10)
-        
-        Return your evaluation in this EXACT JSON format:
+        content: `Evaluate this interview and return ONLY a JSON object with these exact fields:
         {
-          "technicalScore": number,
-          "communicationScore": number,
+          "technicalScore": number (1-10),
+          "communicationScore": number (1-10),
           "justification": string,
-          "completionStatus": "complete"|"partial"|"abrupt"
+          "completionStatus": "complete"|"partial"|"abrupt",
+          "breakdown": [{"category":string,"score":number,"comment":string}]
         }
-        
-        Job Role: ${role}
-        Job Description: ${jobDescription}`
+        Job Role: ${role}`
       },
       ...conversationHistory
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4", // or "gpt-4-1106-preview" if you need JSON mode
+      model: "gpt-4",
       messages,
-      temperature: 0.2 // Lower temperature for more consistent scoring
+      temperature: 0.2
     });
 
-    // Extract JSON from the response
-    const jsonString = response.choices[0].message.content;
-    return JSON.parse(jsonString);
+    // Extract JSON from the response text
+    const jsonMatch = response.choices[0].message.content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON found in response");
+    return JSON.parse(jsonMatch[0]);
     
   } catch (error) {
-    console.error("Error generating final score:", error);
+    console.error("Error generating score:", error);
     return {
       technicalScore: 0,
       communicationScore: 0,
-      justification: "Scoring failed due to system error",
+      justification: "Evaluation failed",
       completionStatus: "error"
     };
   }

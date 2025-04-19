@@ -25,11 +25,9 @@ const ScheduledCallSchema = new mongoose.Schema({
   email: { type: String, required: true },
   status: {
     type: String,
-    enum: ['scheduled', 'in-progress', 'completed', 'failed', 'no-answer'],
+    enum: ['scheduled', 'processing', 'completed', 'failed'],
     default: 'scheduled'
-  },
-  callDuration: Number, 
-  terminationReason: String
+  }
 });
 
 module.exports = mongoose.model("ScheduledCall", ScheduledCallSchema);

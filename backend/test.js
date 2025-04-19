@@ -1,77 +1,127 @@
-// audioUtils.js
-require('dotenv').config();
 const axios = require('axios');
-const { OpenAI } = require('openai');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// PlayHT Configuration
+const PLAYHT_USER_ID = process.env.PLAYHT_USER_ID;
+const PLAYHT_API_KEY = process.env.PLAYHT_API_KEY;
+// Indian accent voices (choose one)
+const INDIAN_VOICES = {
+  FEMALE: 's3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/female-cs/manifest.json',
+  MALE: 's3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/male-cs/manifest.json'
+};
+const SELECTED_VOICE = INDIAN_VOICES.FEMALE; // Change to MALE if preferred
+
+// Predefined text to convert to speech
+const TEST_TEXT = "Namaste! My name is Priya. I'll be your interviewer today. " + 
+                  "Tell me about your experience with JavaScript and Node.js. " +
+                  "What challenges have you faced while working with asynchronous programming?";
 
 /**
- * Downloads and transcribes audio from Twilio URL
- * @param {string} recordingUrl - Twilio recording URL
- * @param {string} callSid - For logging/temp files
- * @returns {Promise<string>} Transcription text
+ * Converts text to speech using PlayHT API and saves as MP3
+ * @param {string} text - Text to convert to speech
+ * @param {string} voice - PlayHT voice ID
+ * @returns {Promise<string>} Path to the generated audio file
  */
-async function transcribeRecording(recordingUrl, callSid, retries = 3, delayMs = 2000) {
-  const tempDir = path.join(__dirname, 'call_recordings');
-  
+async function textToSpeech(text, voice = SELECTED_VOICE) {
   try {
-    // 1. Create temp directory if needed
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-
-    // 2. Download with retry logic
-    let response;
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        console.log(`[${callSid}] Download attempt ${attempt}/${retries}`);
-        response = await axios({
-          method: 'get',
-          url: recordingUrl,
-          responseType: 'stream',
-          auth: {
-            username: process.env.TWILIO_ACCOUNT_SID,
-            password: process.env.TWILIO_AUTH_TOKEN
-          },
-          timeout: 30000
-        });
-        break; // Success - exit retry loop
-      } catch (error) {
-        if (attempt === retries) throw error;
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+    const outputPath = path.join(__dirname, 'output.mp3');
+    
+    console.log('Converting text to speech with Indian accent...');
+    
+    // Step 1: Request audio conversion
+    const convertResponse = await axios.post(
+      'https://play.ht/api/v1/convert',
+      {
+        content: [text],
+        voice: voice,
+        globalSpeed: '100%',
+        outputFormat: 'mp3',
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${PLAYHT_API_KEY}`,
+          'X-User-ID': PLAYHT_USER_ID,
+          'Content-Type': 'application/json',
+        },
       }
+    );
+
+    const transcriptionId = convertResponse.data.transcriptionId;
+    console.log('Conversion started. Transcription ID:', transcriptionId);
+
+    // Step 2: Poll for completion
+    let audioUrl;
+    for (let i = 0; i < 10; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const statusResponse = await axios.get(
+        `https://play.ht/api/v1/articleStatus?transcriptionId=${transcriptionId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${PLAYHT_API_KEY}`,
+            'X-User-ID': PLAYHT_USER_ID,
+          },
+        }
+      );
+
+      if (statusResponse.data.converted) {
+        audioUrl = statusResponse.data.audioUrl;
+        break;
+      }
+      console.log(`Waiting for conversion... (attempt ${i + 1})`);
     }
 
-    // 3. Process the successful download
-    const tempFilePath = path.join(tempDir, `${callSid}_${Date.now()}.wav`);
+    if (!audioUrl) {
+      throw new Error('Audio conversion timeout');
+    }
+
+    // Step 3: Download the audio file
+    console.log('Downloading audio file...');
+    const audioResponse = await axios({
+      method: 'get',
+      url: audioUrl,
+      responseType: 'stream',
+    });
+
     await new Promise((resolve, reject) => {
-      response.data.pipe(fs.createWriteStream(tempFilePath))
-        .on('finish', resolve)
-        .on('error', reject);
+      const writer = fs.createWriteStream(outputPath);
+      audioResponse.data.pipe(writer);
+      writer.on('finish', resolve);
+      writer.on('error', reject);
     });
 
-    // 4. Transcribe
-    const transcription = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(tempFilePath),
-      model: "whisper-1",
-      response_format: "text",
-      language: "en"
-    });
-
-    // 5. Cleanup
-    fs.unlink(tempFilePath, () => {});
-    return transcription;
+    console.log('Audio file saved to:', outputPath);
+    return outputPath;
 
   } catch (error) {
-    // Final cleanup if error occurred mid-process
-    const files = fs.readdirSync(tempDir);
-    files.forEach(file => {
-      if (file.includes(callSid)) {
-        fs.unlink(path.join(tempDir, file), () => {});
-      }
-    });
+    console.error('Error in textToSpeech:', error.response?.data || error.message);
     throw error;
   }
 }
 
-module.exports = { transcribeRecording };
+/**
+ * Main test function
+ */
+async function testIndianAccentTTS() {
+  try {
+    console.log('Starting Indian accent text-to-speech test...');
+    console.log('Text to convert:', TEST_TEXT);
+    
+    const audioFile = await textToSpeech(TEST_TEXT);
+    
+    console.log('\nTest completed successfully!');
+    console.log('You can now play:', audioFile);
+    console.log('On most systems, you can play it with:');
+    console.log(`- Mac: afplay ${audioFile}`);
+    console.log(`- Linux: mpg123 ${audioFile}`);
+    console.log(`- Windows: start ${audioFile}`);
+
+  } catch (error) {
+    console.error('Test failed:', error);
+  }
+}
+
+// Run the test
+testIndianAccentTTS();
